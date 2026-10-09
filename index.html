@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Versa</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2/dist/umd/supabase.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b1b3a;--fg:#fff;--card:rgba(255,255,255,.08);--mut:rgba(255,255,255,.62);--ac:#8ab4ff;--bd:rgba(255,255,255,.16);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#000;--fg:#fff;--card:rgba(255,255,255,.08);--mut:rgba(255,255,255,.62);--ac:#fff;--bd:rgba(255,255,255,.16);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 :root[data-theme=black]{--bg:#0c0c0e;--card:rgba(255,255,255,.07);--ac:#c9c9d1}
 :root[data-theme=light]{--bg:#f4f6fb;--fg:#0b1b3a;--card:rgba(11,27,58,.06);--mut:rgba(11,27,58,.6);--ac:#2457d6;--bd:rgba(11,27,58,.16)}
 *{box-sizing:border-box}
@@ -58,6 +59,7 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 .hmid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}.hero h1{font-size:60px;font-weight:600;letter-spacing:.02em;margin:0}.hero p{margin:0;font-size:17px;opacity:.92}
 .hicons{display:flex;gap:12px;margin-top:22px}.hicons span{width:44px;height:44px;border:1.5px solid rgba(255,255,255,.7);border-radius:50%;display:flex;align-items:center;justify-content:center}
 .hbtn{width:100%;max-width:360px;background:#fff;color:#3d5a50;border:0;border-radius:16px;padding:16px;font-size:18px;font-weight:600;cursor:pointer}
+.lk{background:none;border:0;color:var(--ac);padding:0;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -66,12 +68,30 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 <script>
 const K='helper_v1';let S={};
 try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
-S=Object.assign({user:null,logged:false,ses:{},pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#0b1b3a',cac:'#8ab4ff',lang:'th',tasks:[],goals:[],glog:{},
+S=Object.assign({user:null,logged:false,ses:{},pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
 const save=()=>{S.ts=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(push,1500)};
-async function push(){/* hook: send S to Supabase here */}
+const SB_URL='https://wgpvgmnsrencoxogevti.supabase.co',SB_KEY='sb_publishable_FzYwg0GyqtgjbchTEwCpDA_IRO2Wo6I';
+const sb=(window.supabase&&supabase.createClient)?supabase.createClient(SB_URL,SB_KEY):null;
+let UID=null,EM='',SYNC='',REC=false,busy=false;
+const persist=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const hasData=()=>S.tasks.length||S.goals.length||S.food.length||S.bw.length||S.plans.length||Object.keys(S.wk).length||S.ex.length>4;
+async function push(){if(!sb||!UID)return;try{const {error}=await sb.from('app_state').upsert({user_id:UID,data:S,updated_at:new Date().toISOString()});SYNC=error?'err':'ok'}catch(e){SYNC='err'}}
+async function pull(){
+ if(!sb||!UID)return;
+ try{
+  const {data,error}=await sb.from('app_state').select('data').eq('user_id',UID).maybeSingle();
+  if(error)throw error;
+  if(!data){S.uid=UID;save();await push();return}
+  const r=data.data||{},apply=()=>{S=Object.assign({},S,r);S.uid=UID;persist()};
+  if(S.uid==UID){if((r.ts||0)>(S.ts||0))apply();else if((S.ts||0)>(r.ts||0))await push()}
+  else if(!hasData()||confirm(T('มีข้อมูลบนเซิร์ฟเวอร์แล้ว ตกลง = ใช้ข้อมูลจากเซิร์ฟเวอร์ ยกเลิก = ใช้ข้อมูลในเครื่องนี้','Server already has data. OK = use server data, Cancel = use this device')))apply();
+  else{S.uid=UID;save();await push()}
+  SYNC='ok'
+ }catch(e){SYNC='err'}
+}
 const T=(th,en)=>S.lang=='th'?th:en;
 const $=id=>document.getElementById(id), val=id=>($(id)||{}).value||'';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -79,7 +99,7 @@ const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const today=()=>iso(new Date());
 const back=n=>{const d=new Date();d.setDate(d.getDate()-n);return iso(d)};
 const uid=()=>Math.random().toString(36).slice(2,9);
-let V=S.user?'home':'auth',G='workout',mode='',selPlan=null,ppOpen='',pm='',pe='',restLen=60,rt=null;
+let V='boot',G='workout',mode='',selPlan=null,ppOpen='',pm='',pe='',restLen=60,rt=null;
 const MUS=['chest','shoulder','bicep','tricep','forearm','abs','quads','hamstring','glutes','calf','trap','back','cardio'];
 const MTH={chest:'อก',shoulder:'ไหล่',bicep:'ไบเซป',tricep:'ไตรเซป',forearm:'ปลายแขน',abs:'หน้าท้อง',quads:'ต้นขาหน้า',hamstring:'ต้นขาหลัง',glutes:'สะโพก',calf:'น่อง',trap:'ทราพีเซียส',back:'หลัง',cardio:'คาร์ดิโอ'};
 const TYP={machine:['เครื่อง','Machine'],body:['น้ำหนักตัว','Body weight'],free:['ฟรีเวท','Free weight']};
@@ -91,7 +111,7 @@ const IC={cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 
 const ico=(k,s=24)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const head=(t,b,i)=>`<div class="top"><button class="ghost" onclick="${b||"go('home')"}">←</button>${i?ico(i,28):''}<h1>${t}</h1></div>`;
 const lum=c=>{const n=parseInt(c.slice(1),16);return((n>>16)*299+(n>>8&255)*587+(n&255)*114)/1000};
-function applyTheme(){const c=S.cbg||'#0b1b3a',a=S.cac||'#8ab4ff',dk=lum(c)<140,r=document.documentElement.style,P=(k,v)=>r.setProperty(k,v);
+function applyTheme(){const c=S.cbg||'#000000',a=S.cac||'#ffffff',dk=lum(c)<140,r=document.documentElement.style,P=(k,v)=>r.setProperty(k,v);
  P('--bg',c);P('--ac',a);P('--onac',lum(a)<140?'#fff':'#0b1b3a');P('--fg',dk?'#fff':'#0b1b3a');
  P('--card',dk?'rgba(255,255,255,.08)':'rgba(11,27,58,.06)');P('--mut',dk?'rgba(255,255,255,.62)':'rgba(11,27,58,.6)');P('--bd',dk?'rgba(255,255,255,.16)':'rgba(11,27,58,.16)')}
 
@@ -100,6 +120,8 @@ function render(){
  let h='';
  if(V=='cover')h=`<div class="hero"><div class="hmid">${logo}<h1>Versa</h1><p>${T('จัดการทุกอย่างในที่เดียว','Everything, in one place')}</p><div class="hicons">${['cal','goal','gym','food','set'].map(k=>`<span>${ico(k,22)}</span>`).join('')}</div></div><button class="hbtn" onclick="go(S.user?'home':'auth')">${T('เริ่มใช้งาน','Get started')}</button></div>`;
  else if(V=='auth')h=auth();
+ else if(V=='boot')h=`<div class="cover">${logo}</div>`;
+ else if(V=='newpw')h=newpw();
  else if(V=='home')h=home();
  else if(V=='plan')h=planner();
  else if(V=='goal')h=goals();
@@ -108,13 +130,65 @@ function render(){
  else if(V=='set')h=settings();
  $('app').innerHTML=h;
 }
+let aMode='in',aMsg='',aE='';
+const say=t=>{aMsg=t;const m=$('am');if(m)m.textContent=t};
+const keepA=()=>{aE=val('ae')};
+const errT=m=>/Invalid login/i.test(m)?T('อีเมลหรือรหัสผ่านไม่ถูกต้อง','Wrong email or password'):/not confirmed/i.test(m)?T('ยังไม่ได้ยืนยันอีเมล เช็กกล่องจดหมาย','Email not confirmed yet'):/already registered/i.test(m)?T('อีเมลนี้สมัครแล้ว','Email already registered'):m;
 function auth(){
- return `<div class="cover">${logo}<h1>${T('ยินดีต้อนรับ','Welcome')}</h1>
- <div style="width:100%"><input id="an" placeholder="${T('ชื่อของคุณ','Your name')}" style="margin-bottom:8px" onkeydown="if(event.key=='Enter')doAuth()">
- <button class="btn" style="width:100%" onclick="doAuth()">${T('เริ่มเลย','Start')}</button>
- <div class="row" style="justify-content:center;margin-top:12px"><button class="ghost" onclick="S.lang='th';save();render()">ไทย</button><button class="ghost" onclick="S.lang='en';save();render()">EN</button></div></div></div>`;
+ const up=aMode=='up';
+ return `<div class="cover">${logo}<h1>${up?T('สมัครสมาชิก','Sign up'):T('เข้าสู่ระบบ','Log in')}</h1>
+ <div style="width:100%">${up?`<input id="an" placeholder="${T('ชื่อ','Name')}" style="margin-bottom:8px">`:''}
+ <input id="ae" type="email" autocomplete="email" placeholder="${T('อีเมล','Email')}" value="${esc(aE)}" style="margin-bottom:8px">
+ <input id="ap" type="password" autocomplete="${up?'new-password':'current-password'}" placeholder="${T('รหัสผ่าน','Password')}" style="margin-bottom:8px" onkeydown="if(event.key=='Enter')doAuth()">
+ <button class="btn" style="width:100%" onclick="doAuth()">${up?T('สมัคร','Sign up'):T('เข้าสู่ระบบ','Log in')}</button>
+ <p id="am" class="mut">${esc(aMsg)}</p>
+ <p class="mut" style="margin:16px 0 6px;font-size:15px">${up?T('มีบัญชีแล้ว?','Already have an account?'):T('ยังไม่มีบัญชี?','No account yet?')} <button class="lk" onclick="keepA();aMode='${up?'in':'up'}';aMsg='';render()">${up?T('เข้าสู่ระบบ','Log in'):T('สมัครสมาชิก','Create account')}</button></p>
+ ${up?'':`<p class="mut" style="margin:6px 0;font-size:15px">${T('ลืมรหัสผ่าน?','Forgot your password?')} <button class="lk" onclick="forgot()">${T('รีเซ็ต','Reset it')}</button></p>`}
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="ghost" onclick="keepA();S.lang='th';save();render()">ไทย</button><button class="ghost" onclick="keepA();S.lang='en';save();render()">EN</button></div></div></div>`;
 }
-function doAuth(){const n=val('an').trim();if(!n)return alert(T('ใส่ชื่อ','Enter a name'));S.user={n};save();go('home')}
+async function doAuth(){
+ if(!sb)return say(T('เชื่อมเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตแล้วโหลดใหม่','Cannot reach server. Check your connection and reload'));
+ const e=val('ae').trim(),p=val('ap'),up=aMode=='up';aE=e;
+ if(!e||p.length<6)return say(T('ใส่อีเมลและรหัสผ่านอย่างน้อย 6 ตัว','Enter an email and a password of 6+ characters'));
+ say(T('กำลังดำเนินการ','Working...'));
+ try{
+  if(up){const nm=val('an').trim();if(nm){S.user={n:nm};save()}
+   const {data,error}=await sb.auth.signUp({email:e,password:p,options:{emailRedirectTo:location.origin+location.pathname}});
+   if(error)return say(errT(error.message));
+   if(data.session)return afterLogin(data.user);
+   say(T('ส่งอีเมลยืนยันแล้ว เปิดลิงก์ในอีเมลก่อน แล้วกลับมาเข้าสู่ระบบ','Confirmation email sent. Open its link, then log in'));
+  }else{const {data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error)return say(errT(error.message));afterLogin(data.user)}
+ }catch(x){say(T('เชื่อมต่อไม่ได้','Connection failed'))}
+}
+async function forgot(){const e=val('ae').trim();if(!e)return say(T('ใส่อีเมลก่อน','Enter your email first'));
+ try{const {error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname});say(error?errT(error.message):T('ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว เช็กอีเมล','Reset link sent. Check your email'))}catch(x){say(T('เชื่อมต่อไม่ได้','Connection failed'))}}
+function newpw(){return `<div class="cover">${logo}<h1>${T('ตั้งรหัสผ่านใหม่','New password')}</h1><div style="width:100%"><input id="np" type="password" autocomplete="new-password" placeholder="${T('รหัสผ่านใหม่','New password')}" style="margin-bottom:8px"><button class="btn" style="width:100%" onclick="setPw()">OK</button><p id="am" class="mut"></p></div></div>`}
+async function setPw(){const p=val('np');if(p.length<6)return say(T('อย่างน้อย 6 ตัว','At least 6 characters'));
+ const {data,error}=await sb.auth.updateUser({password:p});if(error)return say(errT(error.message));REC=false;afterLogin(data.user)}
+async function afterLogin(u){
+ if(busy||(UID==u.id&&V=='home'))return;busy=true;
+ try{UID=u.id;EM=u.email||'';if(REC){V='newpw';render();return}
+  await pull();if(!S.user||!S.user.n){S.user={n:EM.split('@')[0]||'me'};save()}
+  V='home';render()}finally{busy=false}
+}
+async function boot(){
+ if(!sb){V=S.user?'home':'auth';return render()}
+ try{const {data}=await sb.auth.getSession(),se=data&&data.session;if(se)return afterLogin(se.user);V=(S.uid&&!navigator.onLine)?'home':'auth'}
+ catch(e){V=S.uid?'home':'auth'}
+ render();
+}
+async function logout(){
+ if(!confirm(T('ออกจากระบบ ข้อมูลในเครื่องนี้จะถูกล้าง ข้อมูลบนเซิร์ฟเวอร์ยังอยู่','Log out? Data on this device will be cleared. The server copy stays.')))return;
+ await push();if(SYNC=='err')return alert(T('ซิงค์ไม่สำเร็จ จึงยังไม่ออกจากระบบ','Sync failed, so you were not logged out'));
+ try{await sb.auth.signOut()}catch(e){}try{localStorage.removeItem(K)}catch(e){}location.reload();
+}
+async function syncNow(){await pull();render()}
+if(sb)sb.auth.onAuthStateChange((ev,se)=>{
+ if(ev=='PASSWORD_RECOVERY'){REC=true;V='newpw';render()}
+ else if(ev=='SIGNED_IN'&&se&&!REC)setTimeout(()=>afterLogin(se.user),0);
+ else if(ev=='SIGNED_OUT')UID=null;
+});
+document.addEventListener('visibilitychange',async()=>{if(!UID||V=='auth'||V=='boot'||V=='newpw')return;if(document.hidden){clearTimeout(syncT);push()}else{const b=S.ts;await pull();if(S.ts!=b)render()}});
 let cm=new Date().getFullYear()*12+new Date().getMonth(),selD=today();
 function cal(){
  const y=Math.floor(cm/12),m=cm%12,off=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();let c='';
@@ -216,6 +290,7 @@ const DN=()=>S.lang=='th'?['จ','อ','พ','พฤ','ศ','ส','อา']:['Mo
 const wdi=()=>(new Date().getDay()+6)%7;
 const dflt=id=>exn(id).c=='time'?[{a:20,b:0}]:[{a:10,b:0},{a:10,b:0},{a:10,b:0}];
 if(S.user)delete S.user.p;
+if(S.cbg=='#0b1b3a'&&S.cac=='#8ab4ff'){S.cbg='#000000';S.cac='#ffffff'}
 S.plans.forEach(p=>{if(!p.days){p.days=[0,1,2,3,4,5,6].map(i=>[0,2,4].includes(i)?(p.items||[]).slice():[]);delete p.items}
  p.days=p.days.map(a=>a.map(x=>typeof x=='string'?{e:x,s:dflt(x)}:x))});
 S.ex.forEach(e=>{if(!e.ms)e.ms=[({core:'abs',legs:'quads'})[e.m]||e.m];if(!e.w)e.w=({e1:'heavy',e2:'light',e3:'heavy'})[e.id]||'mid'});
@@ -359,20 +434,21 @@ function rest(s){clearInterval(rt);if(!s){$('rest').style.display='none';return}
  tick();rt=setInterval(tick,250)}
 /* Settings */
 function settings(){
- const P=[['#0b1b3a','#8ab4ff'],['#0c0c0e','#c9c9d1'],['#f4f6fb','#2457d6'],['#10261f','#7fd1a8'],['#2a1633','#e6a8ff'],['#2b1b12','#ffb27a']];
+ const P=[['#000000','#ffffff'],['#ffffff','#000000'],['#0b1b3a','#8ab4ff'],['#0c0c0e','#c9c9d1'],['#f4f6fb','#2457d6'],['#10261f','#7fd1a8'],['#2a1633','#e6a8ff'],['#2b1b12','#ffb27a']];
  const ci=(k,v)=>`<input type="color" value="${v}" style="width:64px;height:40px;padding:2px;flex:none" oninput="S.${k}=this.value;applyTheme()" onchange="save()">`;
  return head(T('ตั้งค่า','Settings'),0,'set')+`<div class="card"><b>${T('โทนสี','Colors')}</b>
- <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#0b1b3a')}</div>
- <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#8ab4ff')}</div>
+ <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#000000')}</div>
+ <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
  <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
  <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
  <div class="card"><b>${T('สำรองข้อมูล','Backup')}</b><p class="mut">${T('คัดลอกข้อมูลไปอีกเครื่องด้วยมือ','Copy your data to another device manually')}</p>
  <textarea id="bk" placeholder="${T('สำรอง/ย้ายข้อมูลด้วยมือ','Manual backup / transfer')}"></textarea><div class="row"><button class="ghost" onclick="$('bk').value=JSON.stringify(S)">${T('ส่งออก','Export')}</button><button class="ghost" onclick="impD()">${T('นำเข้า','Import')}</button></div></div>
- <div class="card"><b>${T('ชื่อ','Name')}</b><div class="row" style="margin-top:8px"><input id="un" value="${esc(S.user.n)}"><button class="btn" onclick="S.user.n=val('un').trim()||S.user.n;save();render()">OK</button></div></div>`;
+ <div class="card"><b>${T('ชื่อ','Name')}</b><div class="row" style="margin-top:8px"><input id="un" value="${esc(S.user.n)}"><button class="btn" onclick="S.user.n=val('un').trim()||S.user.n;save();render()">OK</button></div></div>
+ <div class="card row"><span style="flex:1">${esc(EM)}<br><span class="mut">${SYNC=='ok'?T('ซิงค์แล้ว','Synced'):SYNC=='err'?T('ซิงค์ไม่สำเร็จ','Sync error'):''}</span></span><button class="ghost" onclick="syncNow()">${T('ซิงค์','Sync')}</button><button class="ghost" onclick="logout()">${T('ออกจากระบบ','Log out')}</button></div>`;
 }
 function impD(){try{const o=JSON.parse(val('bk'));S=Object.assign(S,o);S.logged=true;save();render()}catch(e){alert(T('ข้อมูลไม่ถูกต้อง','Invalid data'))}}
-render();
+render();boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
