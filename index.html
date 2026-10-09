@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Versa</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Versa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1b3a;--fg:#fff;--card:rgba(255,255,255,.08);--mut:rgba(255,255,255,.62);--ac:#8ab4ff;--bd:rgba(255,255,255,.16);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme=black]{--bg:#0c0c0e;--card:rgba(255,255,255,.07);--ac:#c9c9d1}
+:root[data-theme=light]{--bg:#f4f6fb;--fg:#0b1b3a;--card:rgba(11,27,58,.06);--mut:rgba(11,27,58,.6);--ac:#2457d6;--bd:rgba(11,27,58,.16)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Prompt",system-ui,-apple-system,"Noto Sans Thai",sans-serif;font-size:16px;line-height:1.45}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 120px}
+h1{font-size:34px;line-height:1.15;margin:0 0 4px;font-weight:700}h2{font-size:24px;margin:20px 0 8px;font-weight:600}.card>.row>b,.card>b{font-size:18px;font-weight:600}.chip{font-size:15px;padding:8px 14px}
+.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin:10px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px 14px;text-align:left;color:var(--fg);font-size:17px;cursor:pointer;min-height:92px}
+.tile small{display:block;color:var(--mut);font-size:13px;margin-top:4px}
+button,input,select,textarea{font:inherit;color:var(--fg)}
+input,select,textarea{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;width:100%;min-width:0}
+select option{color:#000}
+.btn{background:var(--ac);color:var(--onac,var(--bg));border:0;border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.ghost{background:none;border:1px solid var(--bd);color:var(--fg);border-radius:10px;padding:8px 12px;cursor:pointer}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}.row>*{flex:0 1 auto}.row>input,.row>select{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1px solid var(--bd);border-radius:99px;padding:6px 12px;background:none;cursor:pointer}
+.chip.on{background:var(--ac);color:var(--onac,var(--bg));border-color:var(--ac)}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:8px}.top .ghost{padding:6px 12px}
+.done{text-decoration:line-through;opacity:.5}
+.bar{height:8px;background:var(--card);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+.x{background:none;border:0;color:var(--mut);cursor:pointer;font-size:18px}
+.cover{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+#rest{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--bd);display:none}
+#rest .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px}
+#rest b{font-size:26px;font-variant-numeric:tabular-nums;flex:1}
+.dots{display:flex;gap:4px}.dots i{width:14px;height:14px;border-radius:4px;background:var(--card);border:1px solid var(--bd)}.dots i.on{background:var(--ac);border-color:var(--ac)}.dots i.sk{background:none;border-style:dashed}
+input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:none}
+.mz{fill:var(--c,var(--ac));fill-opacity:.55;stroke:var(--bg);stroke-width:1.2;cursor:pointer;transition:fill-opacity .15s}.mz.on{fill-opacity:1;stroke:var(--fg);stroke-width:2}.mz:active{fill-opacity:.8}.ln{fill:none;stroke:var(--bg);stroke-opacity:.55;stroke-width:1.2;pointer-events:none}.nz{fill:var(--card);stroke:var(--bd);stroke-width:1}.top svg{flex:none;color:var(--ac)}.tile svg{color:var(--ac)}textarea{min-height:90px;width:100%}
+.nav5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}.nav5 button{aspect-ratio:1/1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--card);border:1px solid var(--bd);border-radius:16px;color:var(--fg);font-size:12px;font-weight:600;padding:6px 2px;cursor:pointer}.nav5 svg{color:var(--ac)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer}.stat b{display:block;font-size:32px;font-weight:700;line-height:1.1}.stat span{font-size:12px;color:var(--mut)}
+.sets{border-top:1px solid var(--bd);margin-top:8px;padding-top:6px}.act{background:var(--card);border-radius:10px;padding:8px;margin:6px 0}
+.seg{display:grid;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:4px;margin:10px 0}.s5{grid-template-columns:repeat(5,1fr)}.s7{grid-template-columns:repeat(7,1fr)}.seg button{border:0;background:none;color:var(--fg);border-radius:10px;padding:10px 0;font-size:13px;cursor:pointer;min-width:0}.seg button.on{background:var(--ac);color:var(--onac,var(--bg));font-weight:600}.seg sup{font-size:9px;margin-left:1px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-top:8px}.cal small{color:var(--mut);font-size:12px}.cal i{display:block}.cd{aspect-ratio:1;border-radius:10px;border:1px solid transparent;background:none;color:var(--fg);font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0;gap:2px}.cd.tdy{border-color:var(--ac)}.cd.sel{background:var(--ac);color:var(--onac,var(--bg))}.cd span{display:flex;gap:2px;height:5px}.cd u{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.85}.cd u.w{border-radius:1px}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.mg button{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 4px;color:var(--fg);font-size:15px;font-weight:600;cursor:pointer}.mg button small{display:block;font-weight:400;color:var(--mut);font-size:11px}.mg button.on{background:var(--ac);color:var(--onac,var(--bg))}.mg button.on small{color:inherit}
+.s2{grid-template-columns:repeat(2,1fr)}
+.hero{position:fixed;inset:0;z-index:5;background:linear-gradient(165deg,#7f9d8e 0%,#6a8aa0 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(40px + env(safe-area-inset-top,0px)) 24px calc(32px + env(safe-area-inset-bottom,0px));text-align:center}
+.hmid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}.hero h1{font-size:60px;font-weight:600;letter-spacing:.02em;margin:0}.hero p{margin:0;font-size:17px;opacity:.92}
+.hicons{display:flex;gap:12px;margin-top:22px}.hicons span{width:44px;height:44px;border:1.5px solid rgba(255,255,255,.7);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.hbtn{width:100%;max-width:360px;background:#fff;color:#3d5a50;border:0;border-radius:16px;padding:16px;font-size:18px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="rest"><div class="in"><b id="rt">0:00</b><button class="ghost" onclick="rest(0)">Stop</button></div></div>
+<script>
+const K='helper_v1';let S={};
+try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
+S=Object.assign({user:null,logged:false,ses:{},pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#0b1b3a',cac:'#8ab4ff',lang:'th',tasks:[],goals:[],glog:{},
+ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
+plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
+let syncT=null;
+const save=()=>{S.ts=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(push,1500)};
+async function push(){/* hook: send S to Supabase here */}
+const T=(th,en)=>S.lang=='th'?th:en;
+const $=id=>document.getElementById(id), val=id=>($(id)||{}).value||'';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const today=()=>iso(new Date());
+const back=n=>{const d=new Date();d.setDate(d.getDate()-n);return iso(d)};
+const uid=()=>Math.random().toString(36).slice(2,9);
+let V=S.user?'home':'auth',G='workout',mode='',selPlan=null,ppOpen='',pm='',pe='',restLen=60,rt=null;
+const MUS=['chest','shoulder','bicep','tricep','forearm','abs','quads','hamstring','glutes','calf','trap','back','cardio'];
+const MTH={chest:'อก',shoulder:'ไหล่',bicep:'ไบเซป',tricep:'ไตรเซป',forearm:'ปลายแขน',abs:'หน้าท้อง',quads:'ต้นขาหน้า',hamstring:'ต้นขาหลัง',glutes:'สะโพก',calf:'น่อง',trap:'ทราพีเซียส',back:'หลัง',cardio:'คาร์ดิโอ'};
+const TYP={machine:['เครื่อง','Machine'],body:['น้ำหนักตัว','Body weight'],free:['ฟรีเวท','Free weight']};
+const mn=m=>S.lang=='th'?MTH[m]:m[0].toUpperCase()+m.slice(1);
+const go=v=>{V=v;render()};
+const logo='<svg width="84" height="84" viewBox="0 0 76 76" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="64" height="64" rx="18"/><path d="M24 28L38 50L52 28"/></svg>';
+
+const IC={cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',goal:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',gym:'<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>',food:'<path d="M12 7c-2-2-7-1-7 5 0 4 3 8 5 8 1 0 1.2-.6 2-.6s1 .6 2 .6c2 0 5-4 5-8 0-6-5-7-7-5z"/><path d="M12 7c0-2 1-3 3-4"/>',set:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'};
+const ico=(k,s=24)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+const head=(t,b,i)=>`<div class="top"><button class="ghost" onclick="${b||"go('home')"}">←</button>${i?ico(i,28):''}<h1>${t}</h1></div>`;
+const lum=c=>{const n=parseInt(c.slice(1),16);return((n>>16)*299+(n>>8&255)*587+(n&255)*114)/1000};
+function applyTheme(){const c=S.cbg||'#0b1b3a',a=S.cac||'#8ab4ff',dk=lum(c)<140,r=document.documentElement.style,P=(k,v)=>r.setProperty(k,v);
+ P('--bg',c);P('--ac',a);P('--onac',lum(a)<140?'#fff':'#0b1b3a');P('--fg',dk?'#fff':'#0b1b3a');
+ P('--card',dk?'rgba(255,255,255,.08)':'rgba(11,27,58,.06)');P('--mut',dk?'rgba(255,255,255,.62)':'rgba(11,27,58,.6)');P('--bd',dk?'rgba(255,255,255,.16)':'rgba(11,27,58,.16)')}
+
+function render(){
+ applyTheme();document.documentElement.lang=S.lang;
+ let h='';
+ if(V=='cover')h=`<div class="hero"><div class="hmid">${logo}<h1>Versa</h1><p>${T('จัดการทุกอย่างในที่เดียว','Everything, in one place')}</p><div class="hicons">${['cal','goal','gym','food','set'].map(k=>`<span>${ico(k,22)}</span>`).join('')}</div></div><button class="hbtn" onclick="go(S.user?'home':'auth')">${T('เริ่มใช้งาน','Get started')}</button></div>`;
+ else if(V=='auth')h=auth();
+ else if(V=='home')h=home();
+ else if(V=='plan')h=planner();
+ else if(V=='goal')h=goals();
+ else if(V=='gym')h=gym();
+ else if(V=='food')h=food();
+ else if(V=='set')h=settings();
+ $('app').innerHTML=h;
+}
+function auth(){
+ return `<div class="cover">${logo}<h1>${T('ยินดีต้อนรับ','Welcome')}</h1>
+ <div style="width:100%"><input id="an" placeholder="${T('ชื่อของคุณ','Your name')}" style="margin-bottom:8px" onkeydown="if(event.key=='Enter')doAuth()">
+ <button class="btn" style="width:100%" onclick="doAuth()">${T('เริ่มเลย','Start')}</button>
+ <div class="row" style="justify-content:center;margin-top:12px"><button class="ghost" onclick="S.lang='th';save();render()">ไทย</button><button class="ghost" onclick="S.lang='en';save();render()">EN</button></div></div></div>`;
+}
+function doAuth(){const n=val('an').trim();if(!n)return alert(T('ใส่ชื่อ','Enter a name'));S.user={n};save();go('home')}
+let cm=new Date().getFullYear()*12+new Date().getMonth(),selD=today();
+function cal(){
+ const y=Math.floor(cm/12),m=cm%12,off=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();let c='';
+ for(let i=0;i<off;i++)c+='<i></i>';
+ for(let d=1;d<=n;d++){const k=iso(new Date(y,m,d)),tk=S.tasks.some(t=>t.d==k)||S.goals.some(g=>g.mode=='due'&&g.due==k);
+  c+=`<button class="cd ${k==today()?'tdy':''} ${k==selD?'sel':''}" onclick="keep();selD='${k}';render()">${d}<span>${tk?'<u></u>':''}${trained(k)?'<u class="w"></u>':''}</span></button>`}
+ return `<div class="row"><button class="ghost" onclick="keep();cm--;render()">‹</button><b style="flex:1;text-align:center;font-size:18px">${new Date(y,m,1).toLocaleDateString(S.lang=='th'?'th-TH':'en-US',{month:'long',year:'numeric'})}</b><button class="ghost" onclick="keep();cm++;render()">›</button></div><div class="cal">${DN().map(x=>`<small>${x}</small>`).join('')}${c}</div><div class="mut" style="margin-top:8px">● ${T('งาน/กำหนดส่ง','Task/deadline')} &nbsp; ■ ${T('ออกกำลังกาย','Workout')}</div>`;
+}
+let dT='',dN='';
+const keep=()=>{if($('qt')){dT=val('qt');dN=val('qn')}};
+const dim=(y,m)=>new Date(y,m,0).getDate();
+function chDate(){keep();const y=+val('sy'),m=+val('sm'),d=Math.min(+val('sd'),dim(y,m));selD=iso(new Date(y,m-1,d));cm=y*12+m-1;render()}
+function dayDetail(k,add){
+ const ts=S.tasks.filter(t=>t.d==k),w=trained(k),sk=S.skip[k],kc=foodTotal(k),[Y,M,D]=k.split('-').map(Number),loc=S.lang=='th'?'th-TH':'en-US',y0=new Date().getFullYear();
+ const list=ts.map(t=>`<div class="card row" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="tg('${t.id}')"><div style="flex:1" class="${t.done?'done':''}"><b>${esc(t.t)}</b>${t.n?`<div class="mut" style="white-space:pre-wrap">${esc(t.n)}</div>`:''}</div><button class="x" onclick="rmTask('${t.id}')">×</button></div>`).join('')||`<p class="mut">${T('ยังไม่มีงานในวันนี้','No tasks this day')}</p>`;
+ const info=[w?'✓ '+T('ออกกำลังกาย','Workout'):sk?T('พัก','Rest')+': '+esc(sk):'',kc?kc+' kcal':''].filter(Boolean).join(' · ');
+ const yrs=[];for(let y=Math.min(y0-2,Y);y<=Math.max(y0+5,Y);y++)yrs.push(y);
+ const form=add?`<div class="card"><div class="mut" style="margin-bottom:6px">${T('วันที่','Date')}</div><div class="row"><select id="sd" onchange="chDate()">${[...Array(dim(Y,M)).keys()].map(i=>`<option ${i+1==D?'selected':''}>${i+1}</option>`).join('')}</select><select id="sm" onchange="chDate()">${[...Array(12).keys()].map(i=>`<option value="${i+1}" ${i+1==M?'selected':''}>${new Date(2000,i,1).toLocaleDateString(loc,{month:'long'})}</option>`).join('')}</select><select id="sy" onchange="chDate()">${yrs.map(y=>`<option ${y==Y?'selected':''}>${y}</option>`).join('')}</select></div>
+ <input id="qt" placeholder="${T('หัวข้อ','Topic')}" value="${esc(dT)}" style="margin:8px 0"><textarea id="qn" placeholder="${T('เนื้อหา / รายละเอียด','Details')}">${esc(dN)}</textarea><button class="btn" style="width:100%;margin-top:8px" onclick="addTask()">+ ${T('เพิ่มงาน','Add task')}</button></div>`:'';
+ return `<h2>${k==today()?T('วันนี้','Today'):k}</h2>`+form+list+(info?`<div class="mut">${info}</div>`:'');
+}
+function home(){
+ const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','goal',T('เป้าหมาย','Goals')],['gym','gym',T('ฟิตเนส','Fitness')],['food','food',T('อาหาร','Food')],['set','set',T('ตั้งค่า','Settings')]];
+ const st=[['gym',streakN(),T('streak วัน','Day streak')],['plan',S.tasks.filter(t=>!t.done&&t.d<=today()).length,T('งานค้าง/วันนี้','Tasks due')],['food',foodTotal(today()),'kcal']];
+ const gs=S.goals.filter(g=>g.mode!='due'||latest(g.id)<100);
+ return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>
+ <div class="nav5">${nav.map(n=>`<button onclick="go('${n[0]}')">${ico(n[1],30)}${n[2]}</button>`).join('')}</div>
+ <div class="grid3">${st.map(x=>`<div class="stat" onclick="go('${x[0]}')"><b>${x[1]}</b><span>${x[2]}</span></div>`).join('')}</div>
+ <h2>${T('ปฏิทิน','Calendar')}</h2><div class="card">${cal()}</div>${dayDetail(selD,false)}
+ <h2>${T('เป้าหมาย','Goals')}</h2>${gs.map(g=>`<div class="card"><div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span></div>${gctl(g)}</div>`).join('')||`<p class="mut">${T('ยังไม่มีเป้าหมาย','No goals yet')}</p>`}`;
+}
+/* Planner */
+function planner(){
+ const up=S.tasks.filter(t=>!t.done&&t.d>selD).sort((a,b)=>a.d<b.d?-1:1).slice(0,5);
+ return head(T('ปฏิทินงาน','Planner'),0,'cal')+`<div class="card">${cal()}</div>`+dayDetail(selD,true)+(up.length?`<h2>${T('งานถัดไป','Upcoming')}</h2>`+up.map(t=>`<div class="card row"><span style="flex:1">${esc(t.t)}</span><span class="mut">${t.d.slice(5)}</span></div>`).join(''):'');
+}
+function addTask(){const t=val('qt').trim();if(!t)return;S.tasks.push({id:uid(),t,n:val('qn').trim(),d:selD,done:false});dT='';dN='';save();render()}
+const tg=id=>{const t=S.tasks.find(x=>x.id==id);t.done=!t.done;save();render()};
+const rmTask=id=>{S.tasks=S.tasks.filter(x=>x.id!=id);save();render()};
+/* Goals */
+const gv=(id,d)=>(S.glog[id]||{})[d]||0;
+const latest=id=>{const o=S.glog[id]||{},k=Object.keys(o).filter(d=>d<=today()).sort();return k.length?o[k[k.length-1]]:0};
+const dleft=g=>Math.round((new Date(g.due+'T00:00')-new Date(today()+'T00:00'))/864e5);
+function gmeta(g){if(g.mode!='due')return T('รายวัน','Daily');const n=dleft(g);return n>=0?T('เหลือ '+n+' วัน',n+' days left'):T('เลยกำหนด '+(-n)+' วัน',(-n)+' days overdue')}
+function gctl(g){
+ const due=g.mode=='due',v=due?latest(g.id):gv(g.id,today());
+ return g.type=='check'?`<div class="row"><input type="checkbox" ${v>=100?'checked':''} onchange="setG('${g.id}',this.checked?100:0)"><span>${due?T('สำเร็จแล้ว','Completed'):T('ทำวันนี้แล้ว','Done today')}</span></div>`
+ :`<div class="row"><input type="range" min="0" max="100" step="5" value="${v}" onchange="setG('${g.id}',+this.value)" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="width:44px;text-align:right">${v}%</span></div>`;
+}
+function goals(){
+ const wk=n=>[6,5,4,3,2,1,0].map(i=>gv(n,back(i)));
+ return head(T('เป้าหมาย','Goals'),0,'goal')+`<div class="card"><input id="gn" placeholder="${T('ชื่อเป้าหมาย','Goal name')}" style="margin-bottom:8px">
+ <div class="row"><select id="gt"><option value="check">${T('แบบติ๊ก','Check-off')}</option><option value="bar">${T('แบบแถบ %','Slider %')}</option></select><select id="gm" onchange="$('gd').style.display=this.value=='due'?'':'none'"><option value="daily">${T('รายวัน','Daily')}</option><option value="due">${T('มีกำหนดส่ง','Deadline')}</option></select></div>
+ <div class="row"><input id="gd" type="date" value="${back(-7)}" style="display:none"><button class="btn" style="width:100%" onclick="addGoal()">+ ${T('เพิ่มเป้าหมาย','Add goal')}</button></div></div>`+
+ (S.goals.map(g=>{const due=g.mode=='due',v=latest(g.id);let ex;
+  if(due)ex=`<div class="mut" style="margin-top:6px">${T('กำหนด','Due')} ${g.due} · ${v}%</div><div class="bar" style="margin-top:4px"><i style="width:${v}%"></i></div>`;
+  else{const days=wk(g.id),avg=Math.round(days.reduce((a,b)=>a+b,0)/7);ex=`<div class="dots">${days.map(x=>`<i class="${x>=100?'on':''}" style="${x>0&&x<100?'background:var(--ac);opacity:'+(x/100)+';':''}"></i>`).join('')}</div><div class="mut" style="margin-top:6px">${T('เฉลี่ย 7 วัน','7-day avg')} ${avg}%</div><div class="bar" style="margin-top:4px"><i style="width:${avg}%"></i></div>`}
+  return `<div class="card"><div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span><button class="x" onclick="rmGoal('${g.id}')">×</button></div>${gctl(g)}${ex}</div>`}).join('')||`<p class="mut">${T('เพิ่มเป้าหมายแรกของคุณ','Add your first goal.')}</p>`);
+}
+function addGoal(){const n=val('gn').trim();if(!n)return;const m=val('gm'),dd=val('gd');if(m=='due'&&!dd)return alert(T('เลือกวันกำหนด','Pick a due date'));S.goals.push({id:uid(),n,type:val('gt'),mode:m,due:dd});save();render()}
+const rmGoal=id=>{S.goals=S.goals.filter(g=>g.id!=id);delete S.glog[id];save();render()};
+const setG=(id,v)=>{(S.glog[id]=S.glog[id]||{})[today()]=v;save();render()};
+/* Food */
+const foodTotal=d=>S.food.filter(f=>f.d==d).reduce((a,f)=>a+f.k,0);
+const macT=d=>S.food.filter(f=>f.d==d).reduce((a,f)=>({k:a.k+f.k,p:a.p+(f.p||0),c:a.c+(f.c||0),f:a.f+(f.f||0)}),{k:0,p:0,c:0,f:0});
+let FT='m';
+function food(){return head(T('อาหาร','Food'),0,'food')+`<div class="seg s2"><button class="${FT=='m'?'on':''}" onclick="FT='m';render()">${T('มื้ออาหาร','Meals')}</button><button class="${FT=='w'?'on':''}" onclick="FT='w';render()">${T('น้ำหนักตัว','Weight')}</button></div>`+(FT=='w'?weightView():foodMeals())}
+function weightView(){
+ const a=[...S.bw].sort((x,y)=>x.d<y.d?-1:1),n=a.length,last=a[n-1],pv=a[n-2],f=v=>(v>0?'+':'')+v.toFixed(1)+' kg';
+ let ch='';
+ if(n>=2){const q=a.slice(-30),W=320,H=160,g=S.bgoal||0,vs=q.map(x=>x.w).concat(g?[g]:[]),mx=Math.max(...vs),mi=Math.min(...vs),r=(mx-mi)||1,Y=v=>H-24-(v-mi)/r*(H-54),xy=q.map((x,i)=>[20+i*(W-40)/(q.length-1),Y(x.w)]);
+  ch=`<div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%">${g?`<line x1="20" x2="${W-20}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/><text x="${W-20}" y="${Y(g)-5}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${g}</text>`:''}<polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(c=>c.join(',')).join(' ')}"/>${xy.map((c,i)=>`<circle cx="${c[0]}" cy="${c[1]}" r="3.5" fill="var(--ac)"/>${i==0||i==xy.length-1?`<text x="${c[0]}" y="${c[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${q[i].w}</text>`:''}`).join('')}<text x="20" y="${H-6}" font-size="10" fill="var(--mut)">${q[0].d.slice(5)}</text><text x="${W-20}" y="${H-6}" font-size="10" text-anchor="end" fill="var(--mut)">${q[q.length-1].d.slice(5)}</text></svg></div>`}
+ return `<div class="card"><div class="row"><b style="font-size:30px;flex:1">${last?last.w+' kg':'—'}</b>${pv?`<span class="mut">${f(last.w-pv.w)}</span>`:''}</div>
+ ${n>1?`<div class="mut">${T('ตั้งแต่เริ่ม','Since start')} ${f(last.w-a[0].w)}</div>`:''}${S.bgoal&&last?`<div class="mut">${T('เป้าหมาย','Goal')} ${S.bgoal} kg · ${T('เหลือ','Left')} ${Math.abs(last.w-S.bgoal).toFixed(1)} kg</div>`:''}
+ <div class="row" style="margin-top:10px"><input id="bd" type="date" value="${today()}"><input id="bw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last?last.w:''}"></div>
+ <button class="btn" style="width:100%" onclick="addBw()">+ ${T('บันทึกน้ำหนัก','Log weight')}</button>
+ <div class="row" style="margin-top:10px"><input id="bgl" type="number" inputmode="decimal" placeholder="${T('น้ำหนักเป้าหมาย','Goal weight')}" value="${S.bgoal||''}"><button class="ghost" onclick="S.bgoal=+val('bgl')||0;save();render()">OK</button></div></div>`+ch+
+ a.slice(-10).reverse().map(x=>{const i=a.indexOf(x),p=a[i-1];return `<div class="card row"><span style="flex:1">${x.d}</span><b>${x.w} kg</b><span class="mut" style="width:70px;text-align:right">${p?f(x.w-p.w):''}</span><button class="x" onclick="rmBw('${x.d}')">×</button></div>`}).join('');
+}
+function addBw(){const w=+val('bw'),d=val('bd')||today();if(!w)return;S.bw=S.bw.filter(x=>x.d!=d);S.bw.push({d,w});save();render()}
+const rmBw=d=>{S.bw=S.bw.filter(x=>x.d!=d);save();render()};
+function foodMeals(){
+ const d=today(),t=macT(d),pct=Math.min(100,Math.round(t.k/S.kgoal*100));
+ const mb=(l,v,g)=>`<div style="flex:1"><div class="mut">${l}</div><b>${Math.round(v)}${g?' / '+g:''} g</b>${g?`<div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,v/g*100)}%"></i></div>`:''}</div>`;
+ return `<div class="card"><b style="font-size:26px">${t.k} / ${S.kgoal} kcal</b><div class="bar" style="margin-top:6px"><i style="width:${pct}%"></i></div><div class="row" style="margin-top:12px;align-items:flex-start">${mb(T('โปรตีน','Protein'),t.p,S.pg)}${mb(T('คาร์บ','Carb'),t.c,S.cg)}${mb(T('ไขมัน','Fat'),t.f,S.fg)}</div></div>
+ <div class="card"><input id="fn" placeholder="${T('เมนู','Meal')}" style="margin-bottom:8px"><div class="row"><input id="fk" type="number" inputmode="decimal" placeholder="kcal"><input id="fp" type="number" inputmode="decimal" placeholder="P g"><input id="fc" type="number" inputmode="decimal" placeholder="C g"><input id="ff" type="number" inputmode="decimal" placeholder="F g"></div><button class="btn" style="width:100%" onclick="addFood()">+ ${T('เพิ่มมื้อ','Add meal')}</button><div class="mut" style="margin-top:6px">${T('ไม่ใส่ kcal ก็ได้ จะคำนวณจาก P/C/F','Leave kcal empty to auto-calc from P/C/F')}</div></div>`+
+ S.food.filter(f=>f.d==d).map(f=>`<div class="card row"><span style="flex:1"><b>${esc(f.n)}</b><br><span class="mut">P ${f.p||0} · C ${f.c||0} · F ${f.f||0}</span></span><span class="mut">${f.k} kcal</span><button class="x" onclick="rmFood('${f.id}')">×</button></div>`).join('');
+}
+function addFood(){const n=val('fn').trim(),p=+val('fp')||0,c=+val('fc')||0,f=+val('ff')||0,k=+val('fk')||Math.round(4*p+4*c+9*f);if(!n||!k)return;S.food.push({id:uid(),d:today(),n,k,p,c,f});save();render()}
+const rmFood=id=>{S.food=S.food.filter(f=>f.id!=id);save();render()};
+/* Gym */
+function gym(){
+ const tabs=[['workout',T('ออกกำลัง','Workout')],['plans',T('แผน','Plans')],['ex',T('ท่า','Exercises')],['prog',T('พัฒนาการ','Progress')],['streak','Streak']];
+ return head(T('ฟิตเนส','Fitness'),0,'gym')+`<div class="seg s5">${tabs.map(t=>`<button class="${G==t[0]?'on':''}" onclick="G='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`+
+ ({workout:gWork,plans:gPlans,ex:gEx,prog:gProg,streak:gStreak}[G])();
+}
+const exn=id=>(S.ex.find(e=>e.id==id)||{n:'?',c:'reps'});
+const DN=()=>S.lang=='th'?['จ','อ','พ','พฤ','ศ','ส','อา']:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const wdi=()=>(new Date().getDay()+6)%7;
+const dflt=id=>exn(id).c=='time'?[{a:20,b:0}]:[{a:10,b:0},{a:10,b:0},{a:10,b:0}];
+if(S.user)delete S.user.p;
+S.plans.forEach(p=>{if(!p.days){p.days=[0,1,2,3,4,5,6].map(i=>[0,2,4].includes(i)?(p.items||[]).slice():[]);delete p.items}
+ p.days=p.days.map(a=>a.map(x=>typeof x=='string'?{e:x,s:dflt(x)}:x))});
+S.ex.forEach(e=>{if(!e.ms)e.ms=[({core:'abs',legs:'quads'})[e.m]||e.m];if(!e.w)e.w=({e1:'heavy',e2:'light',e3:'heavy'})[e.id]||'mid'});
+S.ex.forEach(e=>{e.ms=[...new Set((e.ms||[]).map(m=>m=='obliques'?'abs':m))]});
+const mus=e=>e.ms||[];
+const fmt=(e,s)=>e.c=='time'?s.a+' min':s.a+'×'+s.b+'kg';
+const mm=ms=>{const t=Math.max(0,Math.floor(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+function prev(id,k,bef){bef=bef||today();const ds=Object.keys(S.wk).filter(d=>d<bef&&S.wk[d][id]&&S.wk[d][id].length).sort();if(!ds.length)return null;const a=S.wk[ds[ds.length-1]][id];return a[Math.min(k,a.length-1)]}
+const lastSets=id=>{const ds=Object.keys(S.wk).filter(d=>S.wk[d][id]&&S.wk[d][id].length).sort();return ds.length?{d:ds[ds.length-1],a:S.wk[ds[ds.length-1]][id]}:null};
+const RNG={heavy:[5,8],mid:[8,12],light:[12,15]};
+const rng=e=>RNG[e.w||'mid'];
+function sug(e,p){
+ if(!p)return null;
+ if(e.c=='time')return {a:p.a+(p.a>=30?2:1),b:0};
+ if(!p.b)return {a:p.a+1,b:0};
+ const [lo,hi]=rng(e),w=e.w||'mid',inc=w=='heavy'?(p.b>=60?5:2.5):w=='light'?(p.b<10?.5:1):(p.b<20?1:2.5);
+ if(p.a>=hi)return {a:lo,b:+(p.b+inc).toFixed(2)};
+ if(p.a<lo)return {a:lo,b:p.b};
+ return {a:p.a+1,b:p.b};
+}
+function sugCard(id){const e=exn(id),l=lastSets(id);if(!l)return '';
+ return `<div class="card"><b>${T('แนะนำครั้งหน้า','Next session suggestion')}</b><div class="mut">${T('อิงจากครั้งล่าสุด','Based on last session')} ${l.d}</div>${l.a.map((x,k)=>`<div class="row"><span style="flex:1">${T('เซ็ต','Set')} ${k+1}: ${fmt(e,x)}</span><span>→ <b>${fmt(e,sug(e,x,null))}</b></span></div>`).join('')}<div class="mut" style="margin-top:6px">${e.c=='time'?T('เพิ่มเวลาทีละน้อย','Add a little time each session'):T('ระดับ'+WL[e.w||'mid'][0]+' ช่วง rep '+rng(e).join('-')+' ถึงเพดานแล้วเพิ่มน้ำหนัก','Class '+WL[e.w||'mid'][1]+', rep range '+rng(e).join('-')+', hit the top then add weight')}</div></div>`}
+const curItems=()=>{const pl=S.plans.find(p=>p.id==selPlan)||S.plans.find(p=>p.id==S.main)||S.plans[0];return pl?pl.days[wdi()]:[]};
+const startW=()=>{S.ses[today()]={st:Date.now(),en:0};delete S.skip[today()];save();render()};
+const doneW=()=>{S.ses[today()].en=Date.now();save();rest(0);render()};
+const resumeW=()=>{S.ses[today()].en=0;save();render()};
+setInterval(()=>{const e=$('el'),x=S.ses[today()];if(e&&x&&!x.en)e.textContent=mm(Date.now()-x.st)},1000);
+function gWork(){
+ if(!S.plans.length)return `<p class="mut">${T('สร้างแผนรายสัปดาห์ในแท็บ "แผน" ก่อน','Create a weekly plan in the Plans tab first.')}</p>`;
+ const pl=S.plans.find(p=>p.id==selPlan)||S.plans.find(p=>p.id==S.main)||S.plans[0];selPlan=pl.id;
+ const d=today(),w=S.wk[d]||{},di=wdi(),items=pl.days[di],ss=S.ses[d],act=ss&&!ss.en;
+ let h=`<div class="row"><select onchange="selPlan=this.value;render()">${S.plans.map(p=>`<option value="${p.id}" ${p.id==pl.id?'selected':''}>${esc(p.n)}${p.id==S.main?' ★':''}</option>`).join('')}</select></div><div class="mut">${T('วันนี้','Today')}: ${DN()[di]}</div>`;
+ if(!items.length)return h+`<p class="mut">${T('วันนี้เป็นวันพักในแผนนี้ เลือกแผนอื่นหรือแก้แผนได้','Rest day in this plan. Pick another plan or edit it.')}</p>`;
+ if(!ss)h+=`<button class="btn" style="width:100%;font-size:20px;padding:16px;margin:10px 0" onclick="startW()">${T('เริ่มออกกำลังกาย','Start workout')}</button>`;
+ else if(ss.en)h+=`<div class="card row"><span style="flex:1">✓ ${T('เสร็จแล้ว','Finished')} · ${mm(ss.en-ss.st)} · ${Object.values(w).reduce((a,x)=>a+x.length,0)} ${T('เซ็ต','sets')}</span><button class="ghost" onclick="resumeW()">${T('เล่นต่อ','Resume')}</button></div>`;
+ else h+=`<div class="card row"><b id="el" style="font-size:32px;flex:1">${mm(Date.now()-ss.st)}</b><button class="btn" onclick="doneW()">✓ ${T('เสร็จ','Done')}</button></div><div class="chips">${[30,60,90,120].map(x=>`<button class="chip ${restLen==x?'on':''}" onclick="restLen=${x};render()">${T('พัก','Rest')} ${x}s</button>`).join('')}</div>`;
+ const blocks=[];items.forEach(it=>{const b=blocks[blocks.length-1];if(it.g&&b&&b[0].g==it.g)b.push(it);else blocks.push([it])});
+ return h+blocks.map(b=>{
+  const lens=b.map(it=>(w[it.e]||[]).length),lo=Math.min(...lens),cur=act?lens.indexOf(lo):-1,sp=b.length>1;
+  const rounds=Math.max(...b.map((it,i)=>Math.max(it.s.length,lens[i]+(i==cur?1:0))));let r='';
+  for(let k=0;k<rounds;k++)b.forEach((it,i)=>{
+   const e=exn(it.e),id=it.e,L=w[id]||[],tg=it.s[k],pv=prev(id,k),nm=sp?`<b>${'ABCDEF'[i]}</b> ${esc(e.n)} · `:'',pt=pv?T('ครั้งก่อน','Last')+' '+fmt(e,pv):'';
+   if(k<L.length)r+=`<div class="row"><span style="flex:1">✓ ${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,L[k])}</span>${act?`<button class="x" onclick="rmSet('${id}',${k})">×</button>`:''}</div>`;
+   else if(i==cur&&k==L.length){const sg=sug(e,pv,tg&&tg.a),t=sg||tg||pv||{a:'',b:''};
+    r+=`<div class="act"><div class="mut">${nm}${T('เซ็ต','Set')} ${k+1}</div><div class="mut">${[tg?T('แผน','Plan')+' '+fmt(e,tg):'',pt,sg?T('แนะนำ','Suggest')+' '+fmt(e,sg):''].filter(Boolean).join(' · ')}</div><div class="row"><input id="a_${id}" type="number" inputmode="decimal" value="${t.a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="b_${id}" type="number" inputmode="decimal" value="${t.b||''}" placeholder="kg">`}<button class="btn" onclick="addSet('${id}')">✓</button></div></div>`}
+   else if(tg)r+=`<div class="row mut"><span>${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,tg)}${pt?' · '+pt:''}</span></div>`});
+  return `<div class="card" ${sp?'style="border-left:4px solid var(--ac)"':''}>${sp?'<div class="mut" style="letter-spacing:.1em">SUPERSET</div>':''}${b.map((it,i)=>`<div class="row"><b style="flex:1">${sp?'ABCDEF'[i]+' · ':''}${esc(exn(it.e).n)}</b><span class="mut">${mus(exn(it.e)).map(mn).join(', ')}</span></div>`).join('')}<div class="sets">${r}</div></div>`}).join('');
+}
+function addSet(id){const a=+val('a_'+id),b=+val('b_'+id)||0;if(!a)return;const d=today();((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});
+ const its=curItems(),it=its.find(x=>x.e==id),ids=it&&it.g?its.filter(x=>x.g==it.g).map(x=>x.e):[id],ls=ids.map(x=>(S.wk[d][x]||[]).length);
+ save();render();ls.every(l=>l==ls[0])?rest(restLen):rest(0)}
+const rmSet=(id,i)=>{S.wk[today()][id].splice(i,1);save();render()};
+let pdi=-1;
+function gPlans(){
+ return `<div class="card"><div class="row"><input id="pn" placeholder="${T('ชื่อแผน','Plan name')}"><button class="btn" onclick="addPlan()">+</button></div></div>`+
+ S.plans.map(p=>{const o=ppOpen==p.id,di=pdi<0?wdi():pdi;return `<div class="card"><div class="row"><b style="flex:1;cursor:pointer" onclick="ppOpen=${o?"''":"'"+p.id+"'"};render()">${esc(p.n)}${p.id==S.main?' ★':''} <span class="mut">${o?'▾':'▸'}</span></b><button class="ghost" onclick="S.main='${p.id}';save();render()">${T('หลัก','Main')}</button><button class="ghost" onclick="dupPlan('${p.id}')">${T('คัดลอก','Copy')}</button><button class="x" onclick="rmPlan('${p.id}')">×</button></div>`+
+ (o?`<div class="seg s7">${p.days.map((a,i)=>`<button class="${di==i?'on':''}" onclick="pdi=${i};render()">${DN()[i]}${a.length?'<sup>'+a.length+'</sup>':''}</button>`).join('')}</div>`+
+  p.days[di].map((it,j,arr)=>{const e=exn(it.e),tm=e.c=='time',nx=arr[j+1],pr=arr[j-1],lk=nx&&it.g&&nx.g==it.g,inG=it.g&&(lk||(pr&&pr.g==it.g));return `<div class="act" ${inG?'style="border-left:4px solid var(--ac)"':''}><div class="row"><b style="flex:1;font-size:17px">${esc(e.n)}</b><span class="mut">${mus(e).map(mn).join(', ')}</span><button class="x" onclick="dayRm('${p.id}',${di},${j})">×</button></div>`+
+   it.s.map((st,k)=>`<div class="row"><span class="mut" style="width:48px;flex:none">${T('เซ็ต','Set')} ${k+1}</span><input type="number" inputmode="decimal" value="${st.a}" placeholder="${tm?'min':'reps'}" onchange="pSet('${p.id}',${di},${j},${k},'a',this.value)">${tm?'':`<input type="number" inputmode="decimal" value="${st.b||''}" placeholder="kg" onchange="pSet('${p.id}',${di},${j},${k},'b',this.value)">`}<button class="x" onclick="rmPS('${p.id}',${di},${j},${k})">×</button></div>`).join('')+
+   `<div class="row"><button class="ghost" onclick="addPS('${p.id}',${di},${j})">+ ${T('เซ็ต','Set')}</button>${nx?`<button class="ghost" onclick="ssTog('${p.id}',${di},${j})">${lk?T('ยกเลิก Superset','Unlink'):T('Superset กับท่าถัดไป','Superset with next')}</button>`:''}</div></div>`}).join('')+
+  `<div class="row"><select onchange="dayAdd('${p.id}',${di},this.value)"><option value="">+ ${T('เพิ่มท่า','Add exercise')}</option>${S.ex.filter(e=>!p.days[di].some(x=>x.e==e.id)).map(e=>`<option value="${e.id}">${esc(e.n)}</option>`).join('')}</select></div>`
+ :`<div class="mut">${p.days.map((a,i)=>a.length?DN()[i]+' '+a.length:'').filter(Boolean).join(' · ')||T('ยังว่าง แตะชื่อแผนเพื่อจัดตาราง','Empty. Tap the name to schedule it.')}</div>`)+`</div>`}).join('');
+}
+const ssTog=(id,i,j)=>{const a=PL(id).days[i],x=a[j],y=a[j+1];if(x.g&&y.g==x.g){delete y.g;if(!(a[j-1]&&a[j-1].g==x.g))delete x.g}else{x.g=x.g||uid();y.g=x.g}save();render()};
+const PL=id=>S.plans.find(p=>p.id==id);
+const pSet=(id,i,j,k,f,v)=>{PL(id).days[i][j].s[k][f]=+v;save()};
+const addPS=(id,i,j)=>{const a=PL(id).days[i][j].s;a.push(a.length?{...a[a.length-1]}:{a:10,b:0});save();render()};
+const rmPS=(id,i,j,k)=>{PL(id).days[i][j].s.splice(k,1);save();render()};
+function addPlan(){const n=val('pn').trim();if(!n)return;const id=uid();S.plans.push({id,n,days:[[],[],[],[],[],[],[]]});if(!S.main)S.main=id;ppOpen=id;save();render()}
+const dupPlan=id=>{const p=PL(id),n=uid();S.plans.push({id:n,n:p.n+' 2',days:JSON.parse(JSON.stringify(p.days))});ppOpen=n;save();render()};
+const dayAdd=(id,i,x)=>{if(!x)return;PL(id).days[i].push({e:x,s:dflt(x)});save();render()};
+const dayRm=(id,i,j)=>{PL(id).days[i].splice(j,1);save();render()};
+const rmPlan=id=>{S.plans=S.plans.filter(p=>p.id!=id);if(S.main==id)S.main=(S.plans[0]||{}).id||null;save();render()};
+let exM=[],exN='',exC='reps',exT='machine',exW='mid',exEd='';
+const WL={heavy:['หนัก','Heavy'],mid:['กลาง','Medium'],light:['เบา','Light']};
+function gEx(){
+ const L=S.lang=='th'?0:1;
+ return `<div class="card">${exEd?`<div class="mut" style="margin-bottom:6px">${T('แก้ไขท่า','Editing exercise')}</div>`:''}<input id="en" value="${esc(exN)}" placeholder="${T('ชื่อท่า','Exercise name')}" style="margin-bottom:8px">
+ <div class="row"><select id="ec"><option value="reps" ${exC=='reps'?'selected':''}>${T('นับ rep + kg','Reps + kg')}</option><option value="time" ${exC=='time'?'selected':''}>${T('นับเวลา','Time')}</option></select><select id="et">${Object.keys(TYP).map(k=>`<option value="${k}" ${exT==k?'selected':''}>${TYP[k][L]}</option>`).join('')}</select></div>
+ <div class="mut" style="margin:8px 0 2px">${T('ระดับน้ำหนัก','Weight class')}</div>
+ <div class="chips">${Object.keys(WL).map(k=>`<button class="chip ${exW==k?'on':''}" onclick="setW('${k}')">${WL[k][L]}</button>`).join('')}</div>
+ <div class="mut">${T('หนัก เช่น Bench, Squat · กลาง เช่น Tricep pushdown · เบา เช่น Lateral raise, Bicep curl','Heavy: Bench, Squat · Medium: Tricep pushdown · Light: Lateral raise, Bicep curl')}</div>
+ <div class="mut" style="margin:10px 0 2px">${T('กล้ามเนื้อที่โดน','Muscles worked')}</div>
+ <div class="chips">${MUS.map(m=>`<button class="chip ${exM.includes(m)?'on':''}" onclick="togM('${m}')">${mn(m)}</button>`).join('')}</div>
+ <button class="btn" style="width:100%;margin-top:8px" onclick="addEx()">${exEd?T('บันทึก','Save'):'+ '+T('เพิ่มท่า','Add exercise')}</button>${exEd?`<button class="ghost" style="width:100%;margin-top:6px" onclick="cancelEx()">${T('ยกเลิก','Cancel')}</button>`:''}</div>`+
+ S.ex.map(e=>`<div class="card row"><span style="flex:1"><b>${esc(e.n)}</b><br><span class="mut">${mus(e).map(mn).join(', ')} · ${TYP[e.t][L]} · ${e.c=='time'?T('เวลา','time'):'reps+kg · '+WL[e.w||'mid'][L]}</span></span><button class="ghost" onclick="editEx('${e.id}')">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmEx('${e.id}')">×</button></div>`).join('');
+}
+const keepEx=()=>{exN=val('en');exC=val('ec');exT=val('et')};
+const togM=m=>{keepEx();exM=exM.includes(m)?exM.filter(x=>x!=m):[...exM,m];render()};
+const setW=w=>{keepEx();exW=w;render()};
+const editEx=id=>{const e=exn(id);exEd=id;exN=e.n;exC=e.c;exT=e.t;exW=e.w||'mid';exM=mus(e).slice();render();try{scrollTo(0,0)}catch(x){}};
+const cancelEx=()=>{exN='';exM=[];exEd='';exW='mid';render()};
+function addEx(){const n=val('en').trim();if(!n)return;if(!exM.length)return alert(T('เลือกกล้ามเนื้ออย่างน้อย 1 ส่วน','Pick at least one muscle'));const o={n,c:val('ec'),t:val('et'),w:exW,ms:exM.slice()};if(exEd)Object.assign(exn(exEd),o);else S.ex.push({id:uid(),...o});exN='';exM=[];exEd='';exW='mid';save();render()}
+const rmEx=id=>{S.ex=S.ex.filter(e=>e.id!=id);S.plans.forEach(p=>p.days=p.days.map(a=>a.filter(i=>i.e!=id)));save();render()};
+function series(id){
+ const e=exn(id),pts=[];
+ Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;
+  pts.push([d,e.c=='time'?s.reduce((a,x)=>a+x.a,0):Math.max(...s.map(x=>x.b>0?x.b:x.a))])});
+ return pts;
+}
+const pickM=m=>{pm=m;pe='';render()};
+const MC={shoulder:'#d9a441',chest:'#c45f86',bicep:'#4f8a5b',tricep:'#4f8a5b',forearm:'#b08a5a',abs:'#3f8fbf',quads:'#7e5aa5',hamstring:'#7e5aa5',glutes:'#3f8fbf',calf:'#b03a3a',trap:'#d9a441',back:'#b08a5a'};
+const SH='M82 54Q66 48 52 60Q44 70 46 84Q58 86 66 80Q78 74 82 54Z',AR='M46 88Q54 90 62 86Q66 100 62 118Q54 124 46 118Q42 104 46 88Z',FA='M44 122Q54 126 62 122Q64 140 58 160Q50 168 42 160Q40 140 44 122Z';
+const FR=[['shoulder',SH],['chest','M99 58Q86 54 78 62Q72 70 76 82Q84 94 99 90Z'],['bicep',AR],['forearm',FA],['abs','M99 94Q88 94 80 100Q76 112 77 128Q80 142 88 148Q94 150 99 150Z'],['quads','M98 156Q86 152 78 160Q72 190 76 224Q82 236 92 232Q100 200 98 156Z']];
+const BK=[['trap','M99 38Q86 44 68 56Q80 64 90 80L99 104Z'],['shoulder',SH],['back','M99 104L90 80Q80 66 70 62Q64 76 66 96Q72 120 88 134L99 134Z'],['tricep',AR],['forearm',FA],['glutes','M99 138Q84 134 76 144Q72 160 80 170Q92 174 99 168Z'],['hamstring','M98 174Q86 172 78 178Q72 204 76 228Q84 238 94 232Q100 204 98 174Z'],['calf','M78 240Q86 238 94 242Q96 280 90 310Q82 314 78 306Q74 280 78 240Z']];
+function bodyMap(){
+ const half=l=>l.map(([m,d])=>`<path class="mz ${pm==m?'on':''}" style="--c:${MC[m]}" d="${d}" onclick="pickM('${m}')"/>`).join('');
+ const base=sh=>`<path class="nz" d="M100 3Q114 3 115 19Q115 30 110 37Q106 43 100 43Q94 43 90 37Q85 30 85 19Q86 3 100 3Z"/><path class="nz" d="M68 52Q100 44 132 52Q144 66 140 96Q134 118 128 140Q126 152 118 160L100 164L82 160Q74 152 72 140Q66 118 60 96Q56 66 68 52Z"/>`+[0,1].map(f=>`<g ${f?'transform="translate(200,0) scale(-1,1)"':''}><path class="nz" d="M98 148Q84 146 76 156Q70 190 74 230Q76 262 77 306Q82 318 92 316Q97 280 97 240Q101 200 98 148Z"/><path class="nz" d="M39 158Q34 170 35 182Q36 190 42 191Q50 190 52 182Q54 170 52 158Z"/><path class="nz" d="M77 312Q73 328 71 338Q72 346 80 347Q90 347 93 340Q95 330 92 314Z"/></g>`).join('');
+ const fig=(l,sh)=>base(sh)+`<g>${half(l)}</g><g transform="translate(200,0) scale(-1,1)">${half(l)}</g>`;
+ return `<svg viewBox="0 0 400 362" style="width:100%;max-width:380px;display:block;margin:0 auto"><g>${fig(FR,1)}<path class="ln" d="M79 112H121M78 126H122M100 94V150"/></g><g transform="translate(200,0)">${fig(BK,0)}</g>
+ <text x="100" y="358" font-size="11" text-anchor="middle" fill="var(--mut)">${T('ด้านหน้า','Front')}</text><text x="300" y="358" font-size="11" text-anchor="middle" fill="var(--mut)">${T('ด้านหลัง','Back')}</text></svg>
+ <div class="mg">${MUS.map(m=>`<button class="${pm==m?'on':''}" onclick="pickM('${m}')">${mn(m)}<small>${S.ex.filter(e=>mus(e).includes(m)).length} ${T('ท่า','ex.')}</small></button>`).join('')}</div>`;
+}
+function gProg(){
+ const exs=S.ex.filter(e=>mus(e).includes(pm));
+ let h=bodyMap();
+ if(!pm)return h+`<p class="mut">${T('แตะกล้ามเนื้อเพื่อดูท่าและกราฟ','Tap a muscle to see its exercises.')}</p>`;
+ h+=`<div class="chips">${exs.map(e=>`<button class="chip ${pe==e.id?'on':''}" onclick="pe='${e.id}';render()">${esc(e.n)}</button>`).join('')||`<span class="mut">${T('ยังไม่มีท่า','No exercises')}</span>`}</div>`;
+ if(!pe)return h;
+ const p=series(pe),e=exn(pe),u=e.c=='time'?'min/day':'kg (max)';
+ if(p.length<2)return h+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
+ const W=320,H=160,mx=Math.max(...p.map(x=>x[1])),mi=Math.min(...p.map(x=>x[1])),r=(mx-mi)||1;
+ const xy=p.map((x,i)=>[20+i*(W-40)/(p.length-1),H-20-(x[1]-mi)/r*(H-50)]);
+ return h+sugCard(pe)+`<div class="card"><div class="mut">${esc(e.n)} — ${u}</div><svg viewBox="0 0 ${W} ${H}" width="100%"><polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(a=>a.join(',')).join(' ')}"/>${xy.map((a,i)=>`<circle cx="${a[0]}" cy="${a[1]}" r="4" fill="var(--ac)"/><text x="${a[0]}" y="${a[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${p[i][1]}</text>`).join('')}<text x="20" y="${H-4}" font-size="10" fill="var(--mut)">${p[0][0].slice(5)}</text><text x="${W-20}" y="${H-4}" font-size="10" text-anchor="end" fill="var(--mut)">${p[p.length-1][0].slice(5)}</text></svg></div>`;
+}
+const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
+function streakN(){let n=0,i=trained(today())||S.skip[today()]?0:1;for(;i<400;i++){const d=back(i);if(trained(d))n++;else if(!S.skip[d])break}return n}
+function gStreak(){
+ const d=today(),sk=S.skip[d];
+ return `<div class="card" style="text-align:center"><h1 style="font-size:52px">${streakN()}</h1><div class="mut">${T('วันต่อเนื่อง','day streak')}</div></div>
+ <div class="card">${sk?`<div class="row"><span style="flex:1">${T('วันนี้พัก','Rest today')}: ${esc(sk)}</span><button class="x" onclick="delete S.skip['${d}'];save();render()">×</button></div>`:`<div class="row"><input id="sr" placeholder="${T('วันนี้ไม่ว่าง เพราะ…','Skipping today because…')}"><button class="btn" onclick="skipDay()">OK</button></div>`}</div>
+ <div class="dots" style="flex-wrap:wrap">${[...Array(28).keys()].reverse().map(n=>{const x=back(n);return `<i title="${x}" class="${trained(x)?'on':S.skip[x]?'sk':''}"></i>`}).join('')}</div>
+ ${Object.keys(S.skip).sort().reverse().slice(0,5).map(x=>`<div class="mut">${x}: ${esc(S.skip[x])}</div>`).join('')}`;
+}
+function skipDay(){const r=val('sr').trim();if(!r)return;S.skip[today()]=r;save();render()}
+/* Rest timer */
+function rest(s){clearInterval(rt);if(!s){$('rest').style.display='none';return}
+ const end=Date.now()+s*1000;$('rest').style.display='block';
+ const tick=()=>{const l=Math.ceil((end-Date.now())/1000);if(l<=0){clearInterval(rt);$('rt').textContent=T('พักครบแล้ว!','Rest over!');try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}setTimeout(()=>{$('rest').style.display='none'},3000);return}
+  $('rt').textContent=Math.floor(l/60)+':'+String(l%60).padStart(2,'0')};
+ tick();rt=setInterval(tick,250)}
+/* Settings */
+function settings(){
+ const P=[['#0b1b3a','#8ab4ff'],['#0c0c0e','#c9c9d1'],['#f4f6fb','#2457d6'],['#10261f','#7fd1a8'],['#2a1633','#e6a8ff'],['#2b1b12','#ffb27a']];
+ const ci=(k,v)=>`<input type="color" value="${v}" style="width:64px;height:40px;padding:2px;flex:none" oninput="S.${k}=this.value;applyTheme()" onchange="save()">`;
+ return head(T('ตั้งค่า','Settings'),0,'set')+`<div class="card"><b>${T('โทนสี','Colors')}</b>
+ <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#0b1b3a')}</div>
+ <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#8ab4ff')}</div>
+ <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
+ <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
+ <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
+ <div class="card"><b>${T('สำรองข้อมูล','Backup')}</b><p class="mut">${T('คัดลอกข้อมูลไปอีกเครื่องด้วยมือ','Copy your data to another device manually')}</p>
+ <textarea id="bk" placeholder="${T('สำรอง/ย้ายข้อมูลด้วยมือ','Manual backup / transfer')}"></textarea><div class="row"><button class="ghost" onclick="$('bk').value=JSON.stringify(S)">${T('ส่งออก','Export')}</button><button class="ghost" onclick="impD()">${T('นำเข้า','Import')}</button></div></div>
+ <div class="card"><b>${T('ชื่อ','Name')}</b><div class="row" style="margin-top:8px"><input id="un" value="${esc(S.user.n)}"><button class="btn" onclick="S.user.n=val('un').trim()||S.user.n;save();render()">OK</button></div></div>`;
+}
+function impD(){try{const o=JSON.parse(val('bk'));S=Object.assign(S,o);S.logged=true;save();render()}catch(e){alert(T('ข้อมูลไม่ถูกต้อง','Invalid data'))}}
+render();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
