@@ -60,15 +60,19 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 .hicons{display:flex;gap:12px;margin-top:22px}.hicons span{width:44px;height:44px;border:1.5px solid rgba(255,255,255,.7);border-radius:50%;display:flex;align-items:center;justify-content:center}
 .hbtn{width:100%;max-width:360px;background:#fff;color:#3d5a50;border:0;border-radius:16px;padding:16px;font-size:18px;font-weight:600;cursor:pointer}
 .lk{background:none;border:0;color:var(--ac);padding:0;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.x{padding:6px 10px}
+#toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ac);color:var(--onac,var(--bg));padding:10px 18px;border-radius:99px;font-weight:600;display:none;z-index:9;max-width:90%;text-align:center}
+.hgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0}.hb{aspect-ratio:1;border-radius:10px;border:1px solid var(--bd);background:none;color:var(--fg);font-size:14px;cursor:pointer;padding:0}.hb.on{background:var(--ac);color:var(--onac,var(--bg));border-color:var(--ac)}.hb.sk{border-style:dashed}.hb.sel{outline:2px solid var(--fg);outline-offset:1px}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="toast"></div>
 <div id="rest"><div class="in"><b id="rt">0:00</b><button class="ghost" onclick="rest(0)">Stop</button></div></div>
 <script>
 const K='helper_v1';let S={};
 try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
-S=Object.assign({user:null,logged:false,ses:{},pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
+S=Object.assign({user:null,logged:false,ses:{},wu:{},pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
@@ -193,31 +197,50 @@ let cm=new Date().getFullYear()*12+new Date().getMonth(),selD=today();
 function cal(){
  const y=Math.floor(cm/12),m=cm%12,off=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();let c='';
  for(let i=0;i<off;i++)c+='<i></i>';
- for(let d=1;d<=n;d++){const k=iso(new Date(y,m,d)),tk=S.tasks.some(t=>t.d==k)||S.goals.some(g=>g.mode=='due'&&g.due==k);
+ for(let d=1;d<=n;d++){const k=iso(new Date(y,m,d)),tk=tasksOn(k).length>0||S.goals.some(g=>g.mode=='due'&&g.due==k);
   c+=`<button class="cd ${k==today()?'tdy':''} ${k==selD?'sel':''}" onclick="keep();selD='${k}';render()">${d}<span>${tk?'<u></u>':''}${trained(k)?'<u class="w"></u>':''}</span></button>`}
  return `<div class="row"><button class="ghost" onclick="keep();cm--;render()">‹</button><b style="flex:1;text-align:center;font-size:18px">${new Date(y,m,1).toLocaleDateString(S.lang=='th'?'th-TH':'en-US',{month:'long',year:'numeric'})}</b><button class="ghost" onclick="keep();cm++;render()">›</button></div><div class="cal">${DN().map(x=>`<small>${x}</small>`).join('')}${c}</div><div class="mut" style="margin-top:8px">● ${T('งาน/กำหนดส่ง','Task/deadline')} &nbsp; ■ ${T('ออกกำลังกาย','Workout')}</div>`;
 }
-let dT='',dN='';
-const keep=()=>{if($('qt')){dT=val('qt');dN=val('qn')}};
+let dT='',dN='',dR='';
+const recurs=(t,k)=>{if(!t.r||k<t.d)return false;const a=new Date(t.d+'T00:00'),b=new Date(k+'T00:00'),df=Math.round((b-a)/864e5),g=b.getDay();return t.r=='d'||(t.r=='x'&&g>=1&&g<=5)||(t.r=='w'&&df%7==0)||(t.r=='m'&&a.getDate()==b.getDate())};
+const tasksOn=k=>S.tasks.filter(t=>t.r?recurs(t,k):t.d==k);
+const isDone=(t,k)=>t.r?!!(t.dn&&t.dn[k]):!!t.done;
+const dueCount=()=>{const d=today();return S.tasks.filter(t=>!t.r&&!t.done&&t.d<d).length+tasksOn(d).filter(t=>!isDone(t,d)).length};
+const RL={d:['ทุกวัน','Daily'],x:['จันทร์–ศุกร์','Weekdays'],w:['ทุกสัปดาห์','Weekly'],m:['ทุกเดือน','Monthly']};
+const keep=()=>{if($('qt')){dT=val('qt');dN=val('qn');dR=val('qr')}};
 const dim=(y,m)=>new Date(y,m,0).getDate();
 function chDate(){keep();const y=+val('sy'),m=+val('sm'),d=Math.min(+val('sd'),dim(y,m));selD=iso(new Date(y,m-1,d));cm=y*12+m-1;render()}
 function dayDetail(k,add){
- const ts=S.tasks.filter(t=>t.d==k),w=trained(k),sk=S.skip[k],kc=foodTotal(k),[Y,M,D]=k.split('-').map(Number),loc=S.lang=='th'?'th-TH':'en-US',y0=new Date().getFullYear();
- const list=ts.map(t=>`<div class="card row" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="tg('${t.id}')"><div style="flex:1" class="${t.done?'done':''}"><b>${esc(t.t)}</b>${t.n?`<div class="mut" style="white-space:pre-wrap">${esc(t.n)}</div>`:''}</div><button class="x" onclick="rmTask('${t.id}')">×</button></div>`).join('')||`<p class="mut">${T('ยังไม่มีงานในวันนี้','No tasks this day')}</p>`;
+ const ts=tasksOn(k),w=trained(k),sk=S.skip[k],kc=foodTotal(k),[Y,M,D]=k.split('-').map(Number),loc=S.lang=='th'?'th-TH':'en-US',y0=new Date().getFullYear();
+ const list=ts.map(t=>`<div class="card row" style="align-items:flex-start"><input type="checkbox" ${isDone(t,k)?'checked':''} onchange="tg('${t.id}','${k}')"><div style="flex:1" class="${isDone(t,k)?'done':''}"><b>${esc(t.t)}</b>${t.r?` <span class="mut">↻ ${RL[t.r][S.lang=='th'?0:1]}</span>`:''}${t.n?`<div class="mut" style="white-space:pre-wrap">${esc(t.n)}</div>`:''}</div><button class="x" onclick="rmTask('${t.id}')">×</button></div>`).join('')||`<p class="mut">${T('ยังไม่มีงานในวันนี้','No tasks this day')}</p>`;
  const info=[w?'✓ '+T('ออกกำลังกาย','Workout'):sk?T('พัก','Rest')+': '+esc(sk):'',kc?kc+' kcal':''].filter(Boolean).join(' · ');
  const yrs=[];for(let y=Math.min(y0-2,Y);y<=Math.max(y0+5,Y);y++)yrs.push(y);
  const form=add?`<div class="card"><div class="mut" style="margin-bottom:6px">${T('วันที่','Date')}</div><div class="row"><select id="sd" onchange="chDate()">${[...Array(dim(Y,M)).keys()].map(i=>`<option ${i+1==D?'selected':''}>${i+1}</option>`).join('')}</select><select id="sm" onchange="chDate()">${[...Array(12).keys()].map(i=>`<option value="${i+1}" ${i+1==M?'selected':''}>${new Date(2000,i,1).toLocaleDateString(loc,{month:'long'})}</option>`).join('')}</select><select id="sy" onchange="chDate()">${yrs.map(y=>`<option ${y==Y?'selected':''}>${y}</option>`).join('')}</select></div>
- <input id="qt" placeholder="${T('หัวข้อ','Topic')}" value="${esc(dT)}" style="margin:8px 0"><textarea id="qn" placeholder="${T('เนื้อหา / รายละเอียด','Details')}">${esc(dN)}</textarea><button class="btn" style="width:100%;margin-top:8px" onclick="addTask()">+ ${T('เพิ่มงาน','Add task')}</button></div>`:'';
+ <input id="qt" placeholder="${T('หัวข้อ','Topic')}" value="${esc(dT)}" style="margin:8px 0"><textarea id="qn" placeholder="${T('เนื้อหา / รายละเอียด','Details')}">${esc(dN)}</textarea><select id="qr" style="margin-top:8px"><option value="" ${dR==''?'selected':''}>${T('ไม่ซ้ำ','No repeat')}</option>${Object.keys(RL).map(k=>`<option value="${k}" ${dR==k?'selected':''}>${T('ซ้ำ','Repeat')} ${RL[k][S.lang=='th'?0:1]}</option>`).join('')}</select><button class="btn" style="width:100%;margin-top:8px" onclick="addTask()">+ ${T('เพิ่มงาน','Add task')}</button></div>`:'';
  return `<h2>${k==today()?T('วันนี้','Today'):k}</h2>`+form+list+(info?`<div class="mut">${info}</div>`:'');
+}
+let toastT;const toast=t=>{const e=$('toast');if(!e)return;e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.display='none'},3500)};
+let wkOff=0;
+function weekCard(){
+ const days=[...Array(7).keys()].map(i=>back(i+7*wkOff));
+ let sets=0,cnt={};days.forEach(d=>Object.keys(S.wk[d]||{}).forEach(id=>{const n=S.wk[d][id].length;sets+=n;mus(exn(id)).forEach(m=>cnt[m]=(cnt[m]||0)+n)}));
+ const wd=days.filter(trained).length,fd=days.filter(d=>foodTotal(d)>0),avg=k=>fd.length?Math.round(fd.reduce((a,d)=>a+macT(d)[k],0)/fd.length):0;
+ const bw=S.bw.filter(x=>days.includes(x.d)).sort((a,b)=>a.d<b.d?-1:1),dw=bw.length>1?bw[bw.length-1].w-bw[0].w:null;
+ let td=0,tt=0;days.forEach(d=>tasksOn(d).forEach(t=>{tt++;if(isDone(t,d))td++}));
+ const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,6),cell=(v,l)=>`<div class="stat" style="cursor:default"><b style="font-size:24px">${v}</b><span>${l}</span></div>`;
+ return `<h2>${T('สรุปสัปดาห์','Weekly summary')}</h2><div class="seg s2"><button class="${wkOff?'':'on'}" onclick="wkOff=0;render()">${T('7 วันล่าสุด','Last 7 days')}</button><button class="${wkOff?'on':''}" onclick="wkOff=1;render()">${T('7 วันก่อนหน้า','Previous 7')}</button></div>
+ <div class="grid3">${cell(wd+'/7',T('วันออกกำลัง','Workout days'))}${cell(sets,T('เซ็ตรวม','Total sets'))}${cell(td+'/'+tt,T('งานเสร็จ','Tasks done'))}</div>
+ <div class="grid3" style="margin-top:8px">${cell(avg('k')||'-','kcal '+T('เฉลี่ย','avg'))}${cell(avg('p')?avg('p')+' g':'-',T('โปรตีนเฉลี่ย','Protein avg'))}${cell(dw==null?'-':(dw>0?'+':'')+dw.toFixed(1),T('น้ำหนัก kg','Weight kg'))}</div>
+ ${top.length?`<div class="chips" style="margin-top:10px">${top.map(([m,n])=>`<span class="chip">${mn(m)} ${n}</span>`).join('')}</div>`:''}`;
 }
 function home(){
  const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','goal',T('เป้าหมาย','Goals')],['gym','gym',T('ฟิตเนส','Fitness')],['food','food',T('อาหาร','Food')],['set','set',T('ตั้งค่า','Settings')]];
- const st=[['gym',streakN(),T('streak วัน','Day streak')],['plan',S.tasks.filter(t=>!t.done&&t.d<=today()).length,T('งานค้าง/วันนี้','Tasks due')],['food',foodTotal(today()),'kcal']];
+ const st=[['gym',streakN(),T('streak วัน','Day streak')],['plan',dueCount(),T('งานค้าง/วันนี้','Tasks due')],['food',foodTotal(today()),'kcal']];
  const gs=S.goals.filter(g=>g.mode!='due'||latest(g.id)<100);
  return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>
  <div class="nav5">${nav.map(n=>`<button onclick="go('${n[0]}')">${ico(n[1],30)}${n[2]}</button>`).join('')}</div>
  <div class="grid3">${st.map(x=>`<div class="stat" onclick="go('${x[0]}')"><b>${x[1]}</b><span>${x[2]}</span></div>`).join('')}</div>
- <h2>${T('ปฏิทิน','Calendar')}</h2><div class="card">${cal()}</div>${dayDetail(selD,false)}
+ ${weekCard()}<h2>${T('ปฏิทิน','Calendar')}</h2><div class="card">${cal()}</div>${dayDetail(selD,false)}
  <h2>${T('เป้าหมาย','Goals')}</h2>${gs.map(g=>`<div class="card"><div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span></div>${gctl(g)}</div>`).join('')||`<p class="mut">${T('ยังไม่มีเป้าหมาย','No goals yet')}</p>`}`;
 }
 /* Planner */
@@ -225,9 +248,9 @@ function planner(){
  const up=S.tasks.filter(t=>!t.done&&t.d>selD).sort((a,b)=>a.d<b.d?-1:1).slice(0,5);
  return head(T('ปฏิทินงาน','Planner'),0,'cal')+`<div class="card">${cal()}</div>`+dayDetail(selD,true)+(up.length?`<h2>${T('งานถัดไป','Upcoming')}</h2>`+up.map(t=>`<div class="card row"><span style="flex:1">${esc(t.t)}</span><span class="mut">${t.d.slice(5)}</span></div>`).join(''):'');
 }
-function addTask(){const t=val('qt').trim();if(!t)return;S.tasks.push({id:uid(),t,n:val('qn').trim(),d:selD,done:false});dT='';dN='';save();render()}
-const tg=id=>{const t=S.tasks.find(x=>x.id==id);t.done=!t.done;save();render()};
-const rmTask=id=>{S.tasks=S.tasks.filter(x=>x.id!=id);save();render()};
+function addTask(){const t=val('qt').trim();if(!t)return;const r=val('qr');S.tasks.push({id:uid(),t,n:val('qn').trim(),d:selD,done:false,...(r?{r}:{})});dT='';dN='';dR='';save();render()}
+const tg=(id,k)=>{const t=S.tasks.find(x=>x.id==id);if(t.r){t.dn=t.dn||{};t.dn[k]=!t.dn[k]}else t.done=!t.done;save();render()};
+const rmTask=id=>{const t=S.tasks.find(x=>x.id==id);if(t&&t.r&&!confirm(T('ลบงานซ้ำนี้ทั้งชุด','Delete this whole repeating series')))return;S.tasks=S.tasks.filter(x=>x.id!=id);save();render()};
 /* Goals */
 const gv=(id,d)=>(S.glog[id]||{})[d]||0;
 const latest=id=>{const o=S.glog[id]||{},k=Object.keys(o).filter(d=>d<=today()).sort();return k.length?o[k[k.length-1]]:0};
@@ -274,14 +297,18 @@ function foodMeals(){
  const d=today(),t=macT(d),pct=Math.min(100,Math.round(t.k/S.kgoal*100));
  const mb=(l,v,g)=>`<div style="flex:1"><div class="mut">${l}</div><b>${Math.round(v)}${g?' / '+g:''} g</b>${g?`<div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,v/g*100)}%"></i></div>`:''}</div>`;
  return `<div class="card"><b style="font-size:26px">${t.k} / ${S.kgoal} kcal</b><div class="bar" style="margin-top:6px"><i style="width:${pct}%"></i></div><div class="row" style="margin-top:12px;align-items:flex-start">${mb(T('โปรตีน','Protein'),t.p,S.pg)}${mb(T('คาร์บ','Carb'),t.c,S.cg)}${mb(T('ไขมัน','Fat'),t.f,S.fg)}</div></div>
- <div class="card"><input id="fn" placeholder="${T('เมนู','Meal')}" style="margin-bottom:8px"><div class="row"><input id="fk" type="number" inputmode="decimal" placeholder="kcal"><input id="fp" type="number" inputmode="decimal" placeholder="P g"><input id="fc" type="number" inputmode="decimal" placeholder="C g"><input id="ff" type="number" inputmode="decimal" placeholder="F g"></div><button class="btn" style="width:100%" onclick="addFood()">+ ${T('เพิ่มมื้อ','Add meal')}</button><div class="mut" style="margin-top:6px">${T('ไม่ใส่ kcal ก็ได้ จะคำนวณจาก P/C/F','Leave kcal empty to auto-calc from P/C/F')}</div></div>`+
+ <div class="card"><input id="fn" placeholder="${T('เมนู','Meal')}" style="margin-bottom:8px"><div class="row"><input id="fk" type="number" inputmode="decimal" placeholder="kcal"><input id="fp" type="number" inputmode="decimal" placeholder="P g"><input id="fc" type="number" inputmode="decimal" placeholder="C g"><input id="ff" type="number" inputmode="decimal" placeholder="F g"></div><button class="btn" style="width:100%" onclick="addFood()">+ ${T('เพิ่มมื้อ','Add meal')}</button><div class="mut" style="margin-top:6px">${T('ไม่ใส่ kcal ก็ได้ จะคำนวณจาก P/C/F','Leave kcal empty to auto-calc from P/C/F')}</div></div>`+freqFoods()+`` +
  S.food.filter(f=>f.d==d).map(f=>`<div class="card row"><span style="flex:1"><b>${esc(f.n)}</b><br><span class="mut">P ${f.p||0} · C ${f.c||0} · F ${f.f||0}</span></span><span class="mut">${f.k} kcal</span><button class="x" onclick="rmFood('${f.id}')">×</button></div>`).join('');
 }
+function freqFoods(){const m={};S.food.forEach(f=>{const k=f.n.trim().toLowerCase(),o=m[k]||(m[k]={n:f.n,c:0});o.c++;o.f=f});
+ const a=Object.values(m).sort((x,y)=>y.c-x.c).slice(0,8);if(!a.length)return '';
+ return `<div class="mut" style="margin:12px 0 4px">${T('กินบ่อย แตะเพื่อเพิ่ม','Frequent meals. Tap to add')}</div><div class="chips">${a.map(o=>`<button class="chip" onclick="addAgain('${o.f.id}')">${esc(o.n)} · ${o.f.k}</button>`).join('')}</div>`}
+const addAgain=id=>{const f=S.food.find(x=>x.id==id);if(!f)return;S.food.push({...f,id:uid(),d:today()});save();render();toast(T('เพิ่ม ','Added ')+f.n)};
 function addFood(){const n=val('fn').trim(),p=+val('fp')||0,c=+val('fc')||0,f=+val('ff')||0,k=+val('fk')||Math.round(4*p+4*c+9*f);if(!n||!k)return;S.food.push({id:uid(),d:today(),n,k,p,c,f});save();render()}
 const rmFood=id=>{S.food=S.food.filter(f=>f.id!=id);save();render()};
 /* Gym */
 function gym(){
- const tabs=[['workout',T('ออกกำลัง','Workout')],['plans',T('แผน','Plans')],['ex',T('ท่า','Exercises')],['prog',T('พัฒนาการ','Progress')],['streak','Streak']];
+ const tabs=[['workout',T('ออกกำลัง','Workout')],['plans',T('แผน','Plans')],['ex',T('ท่า','Exercises')],['prog',T('พัฒนาการ','Progress')],['streak',T('ประวัติ','History')]];
  return head(T('ฟิตเนส','Fitness'),0,'gym')+`<div class="seg s5">${tabs.map(t=>`<button class="${G==t[0]?'on':''}" onclick="G='${t[0]}';render()">${t[1]}</button>`).join('')}</div>`+
  ({workout:gWork,plans:gPlans,ex:gEx,prog:gProg,streak:gStreak}[G])();
 }
@@ -335,27 +362,50 @@ function gWork(){
    const e=exn(it.e),id=it.e,L=w[id]||[],tg=it.s[k],pv=prev(id,k),nm=sp?`<b>${'ABCDEF'[i]}</b> ${esc(e.n)} · `:'',pt=pv?T('ครั้งก่อน','Last')+' '+fmt(e,pv):'';
    if(k<L.length)r+=`<div class="row"><span style="flex:1">✓ ${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,L[k])}</span>${act?`<button class="x" onclick="rmSet('${id}',${k})">×</button>`:''}</div>`;
    else if(i==cur&&k==L.length){const sg=sug(e,pv,tg&&tg.a),t=sg||tg||pv||{a:'',b:''};
-    r+=`<div class="act"><div class="mut">${nm}${T('เซ็ต','Set')} ${k+1}</div><div class="mut">${[tg?T('แผน','Plan')+' '+fmt(e,tg):'',pt,sg?T('แนะนำ','Suggest')+' '+fmt(e,sg):''].filter(Boolean).join(' · ')}</div><div class="row"><input id="a_${id}" type="number" inputmode="decimal" value="${t.a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="b_${id}" type="number" inputmode="decimal" value="${t.b||''}" placeholder="kg">`}<button class="btn" onclick="addSet('${id}')">✓</button></div></div>`}
+    r+=`<div class="act"><div class="mut">${nm}${T('เซ็ต','Set')} ${k+1}</div><div class="mut">${[tg?T('แผน','Plan')+' '+fmt(e,tg):'',pt,sg?T('แนะนำ','Suggest')+' '+fmt(e,sg):'',bestOf(id)?T('สถิติ','PR')+' '+prShort(e,id):''].filter(Boolean).join(' · ')}</div><div class="row"><input id="a_${id}" type="number" inputmode="decimal" value="${t.a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="b_${id}" type="number" inputmode="decimal" value="${t.b||''}" placeholder="kg">`}<button class="btn" onclick="addSet('${id}')">✓</button><button class="ghost" onclick="addSet('${id}',1)">${T('วอร์ม','Warm')}</button></div></div>`}
    else if(tg)r+=`<div class="row mut"><span>${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,tg)}${pt?' · '+pt:''}</span></div>`});
-  return `<div class="card" ${sp?'style="border-left:4px solid var(--ac)"':''}>${sp?'<div class="mut" style="letter-spacing:.1em">SUPERSET</div>':''}${b.map((it,i)=>`<div class="row"><b style="flex:1">${sp?'ABCDEF'[i]+' · ':''}${esc(exn(it.e).n)}</b><span class="mut">${mus(exn(it.e)).map(mn).join(', ')}</span></div>`).join('')}<div class="sets">${r}</div></div>`}).join('');
+  return `<div class="card" ${sp?'style="border-left:4px solid var(--ac)"':''}>${sp?'<div class="mut" style="letter-spacing:.1em">SUPERSET</div>':''}${b.map((it,i)=>`<div class="row"><b style="flex:1">${sp?'ABCDEF'[i]+' · ':''}${esc(exn(it.e).n)}</b><span class="mut">${mus(exn(it.e)).map(mn).join(', ')}</span></div>`).join('')}<div class="sets">${wuRows(b,act)}${r}</div></div>`}).join('');
 }
-function addSet(id){const a=+val('a_'+id),b=+val('b_'+id)||0;if(!a)return;const d=today();((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});
+const est=(e,s)=>e.c=='time'?s.a:(s.b?+(s.b*(1+s.a/30)).toFixed(1):s.a);
+function bestOf(id){const e=exn(id);let m=0;Object.values(S.wk).forEach(w=>(w[id]||[]).forEach(s=>{m=Math.max(m,est(e,s))}));return m}
+const prShort=(e,id)=>{const m=bestOf(id);return e.c=='time'?m+' min':e.t=='body'?m+' reps':'1RM '+m+' kg'};
+function prCard(id){const e=exn(id);let r={e1:0,e1s:null,e1d:'',wt:0,wtS:null,wtd:'',rp:0,rpd:''};
+ Object.keys(S.wk).sort().forEach(d=>(S.wk[d][id]||[]).forEach(s=>{
+  if(e.c=='time'){if(s.a>r.rp){r.rp=s.a;r.rpd=d}return}
+  if(s.b>0){const m=s.b*(1+s.a/30);if(m>r.e1){r.e1=m;r.e1s=s;r.e1d=d}if(s.b>r.wt||(s.b==r.wt&&s.a>r.wtS.a)){r.wt=s.b;r.wtS=s;r.wtd=d}}
+  if(s.a>r.rp){r.rp=s.a;r.rpd=d}}));
+ if(!r.rp&&!r.e1)return '';
+ const row=(l,v,d)=>`<div class="row"><span style="flex:1">${l}</span><b>${v}</b><span class="mut" style="width:52px;text-align:right">${d.slice(5)}</span></div>`;
+ return `<div class="card"><b>${T('สถิติส่วนตัว','Personal records')}</b>${e.c=='time'?row(T('นานที่สุด','Longest'),r.rp+' min',r.rpd):r.e1?row(T('1RM โดยประมาณ','Est. 1RM'),r.e1.toFixed(1)+' kg',r.e1d)+row(T('หนักที่สุด','Heaviest'),fmt(e,r.wtS),r.wtd):row(T('rep สูงสุด','Most reps'),r.rp,r.rpd)}${r.e1?`<div class="mut" style="margin-top:6px">${T('1RM ประมาณจากสูตร Epley','1RM estimated with the Epley formula')}</div>`:''}</div>`}
+function addSet(id,wu){const a=+val('a_'+id),b=+val('b_'+id)||0;if(!a)return;const d=today(),e=exn(id);
+ if(wu){((S.wu[d]=S.wu[d]||{})[id]=S.wu[d][id]||[]).push({a,b});save();render();rest(0);return}
+ const pb=bestOf(id),m=est(e,{a,b});
+ ((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});
  const its=curItems(),it=its.find(x=>x.e==id),ids=it&&it.g?its.filter(x=>x.g==it.g).map(x=>x.e):[id],ls=ids.map(x=>(S.wk[d][x]||[]).length);
- save();render();ls.every(l=>l==ls[0])?rest(restLen):rest(0)}
+ save();render();ls.every(l=>l==ls[0])?rest(restLen):rest(0);
+ if(pb>0&&m>pb)toast(T('สถิติใหม่ ','New PR ')+e.n+' '+fmt(e,{a,b}));
+}
+const wuRows=(b,act)=>{const d=today();return b.map(it=>((S.wu[d]||{})[it.e]||[]).map((s,k)=>`<div class="row mut"><span style="flex:1">${T('วอร์มอัป','Warm-up')} ${k+1}${b.length>1?' · '+esc(exn(it.e).n):''}: ${fmt(exn(it.e),s)}</span>${act?`<button class="x" onclick="rmWu('${it.e}',${k})">×</button>`:''}</div>`).join('')).join('')};
+const rmWu=(id,k)=>{S.wu[today()][id].splice(k,1);save();render()};
 const rmSet=(id,i)=>{S.wk[today()][id].splice(i,1);save();render()};
 let pdi=-1;
 function gPlans(){
  return `<div class="card"><div class="row"><input id="pn" placeholder="${T('ชื่อแผน','Plan name')}"><button class="btn" onclick="addPlan()">+</button></div></div>`+
  S.plans.map(p=>{const o=ppOpen==p.id,di=pdi<0?wdi():pdi;return `<div class="card"><div class="row"><b style="flex:1;cursor:pointer" onclick="ppOpen=${o?"''":"'"+p.id+"'"};render()">${esc(p.n)}${p.id==S.main?' ★':''} <span class="mut">${o?'▾':'▸'}</span></b><button class="ghost" onclick="S.main='${p.id}';save();render()">${T('หลัก','Main')}</button><button class="ghost" onclick="dupPlan('${p.id}')">${T('คัดลอก','Copy')}</button><button class="x" onclick="rmPlan('${p.id}')">×</button></div>`+
- (o?`<div class="seg s7">${p.days.map((a,i)=>`<button class="${di==i?'on':''}" onclick="pdi=${i};render()">${DN()[i]}${a.length?'<sup>'+a.length+'</sup>':''}</button>`).join('')}</div>`+
-  p.days[di].map((it,j,arr)=>{const e=exn(it.e),tm=e.c=='time',nx=arr[j+1],pr=arr[j-1],lk=nx&&it.g&&nx.g==it.g,inG=it.g&&(lk||(pr&&pr.g==it.g));return `<div class="act" ${inG?'style="border-left:4px solid var(--ac)"':''}><div class="row"><b style="flex:1;font-size:17px">${esc(e.n)}</b><span class="mut">${mus(e).map(mn).join(', ')}</span><button class="x" onclick="dayRm('${p.id}',${di},${j})">×</button></div>`+
+ (o?`<div class="row" style="margin-top:8px"><input id="rn" value="${esc(p.n)}"><button class="ghost" onclick="renPlan('${p.id}')">${T('เปลี่ยนชื่อ','Rename')}</button></div><div class="seg s7">${p.days.map((a,i)=>`<button class="${di==i?'on':''}" onclick="pdi=${i};render()">${DN()[i]}${a.length?'<sup>'+a.length+'</sup>':''}</button>`).join('')}</div>`+
+  p.days[di].map((it,j,arr)=>{const e=exn(it.e),tm=e.c=='time',nx=arr[j+1],pr=arr[j-1],lk=nx&&it.g&&nx.g==it.g,inG=it.g&&(lk||(pr&&pr.g==it.g));return `<div class="act" ${inG?'style="border-left:4px solid var(--ac)"':''}><div class="row"><b style="flex:1;font-size:17px">${esc(e.n)}</b><span class="mut">${mus(e).map(mn).join(', ')}</span>${j>0?`<button class="x" onclick="mv('${p.id}',${di},${j},-1)">↑</button>`:''}${nx?`<button class="x" onclick="mv('${p.id}',${di},${j},1)">↓</button>`:''}<button class="x" onclick="dayRm('${p.id}',${di},${j})">×</button></div>`+
    it.s.map((st,k)=>`<div class="row"><span class="mut" style="width:48px;flex:none">${T('เซ็ต','Set')} ${k+1}</span><input type="number" inputmode="decimal" value="${st.a}" placeholder="${tm?'min':'reps'}" onchange="pSet('${p.id}',${di},${j},${k},'a',this.value)">${tm?'':`<input type="number" inputmode="decimal" value="${st.b||''}" placeholder="kg" onchange="pSet('${p.id}',${di},${j},${k},'b',this.value)">`}<button class="x" onclick="rmPS('${p.id}',${di},${j},${k})">×</button></div>`).join('')+
    `<div class="row"><button class="ghost" onclick="addPS('${p.id}',${di},${j})">+ ${T('เซ็ต','Set')}</button>${nx?`<button class="ghost" onclick="ssTog('${p.id}',${di},${j})">${lk?T('ยกเลิก Superset','Unlink'):T('Superset กับท่าถัดไป','Superset with next')}</button>`:''}</div></div>`}).join('')+
-  `<div class="row"><select onchange="dayAdd('${p.id}',${di},this.value)"><option value="">+ ${T('เพิ่มท่า','Add exercise')}</option>${S.ex.filter(e=>!p.days[di].some(x=>x.e==e.id)).map(e=>`<option value="${e.id}">${esc(e.n)}</option>`).join('')}</select></div>`
+  `<input id="exs" placeholder="${T('ค้นหาท่า','Search exercises')}" oninput="filterEx(this.value)" style="margin-top:8px"><div class="chips" id="exres"></div><div class="row"><select onchange="dayAdd('${p.id}',${di},this.value)"><option value="">+ ${T('เพิ่มท่า','Add exercise')}</option>${exOpts(S.ex.filter(e=>!p.days[di].some(x=>x.e==e.id)))}</select></div>`
  :`<div class="mut">${p.days.map((a,i)=>a.length?DN()[i]+' '+a.length:'').filter(Boolean).join(' · ')||T('ยังว่าง แตะชื่อแผนเพื่อจัดตาราง','Empty. Tap the name to schedule it.')}</div>`)+`</div>`}).join('');
 }
 const ssTog=(id,i,j)=>{const a=PL(id).days[i],x=a[j],y=a[j+1];if(x.g&&y.g==x.g){delete y.g;if(!(a[j-1]&&a[j-1].g==x.g))delete x.g}else{x.g=x.g||uid();y.g=x.g}save();render()};
 const PL=id=>S.plans.find(p=>p.id==id);
+function filterEx(q){q=q.trim().toLowerCase();const r=$('exres'),p=PL(ppOpen);if(!r||!p)return;if(!q){r.innerHTML='';return}
+ const di=pdi<0?wdi():pdi,a=S.ex.filter(e=>!p.days[di].some(x=>x.e==e.id)&&(e.n.toLowerCase().includes(q)||mus(e).some(m=>mn(m).toLowerCase().includes(q)))).slice(0,10);
+ r.innerHTML=a.length?a.map(e=>`<button class="chip" onclick="dayAdd('${p.id}',${di},'${e.id}')">${esc(e.n)}</button>`).join(''):`<span class="mut">${T('ไม่พบ','No match')}</span>`}
+const renPlan=id=>{const n=val('rn').trim();if(!n)return;PL(id).n=n;save();render()};
+const mv=(id,i,j,d)=>{const a=PL(id).days[i],k=j+d;if(k<0||k>=a.length)return;[a[j],a[k]]=[a[k],a[j]];save();render()};
 const pSet=(id,i,j,k,f,v)=>{PL(id).days[i][j].s[k][f]=+v;save()};
 const addPS=(id,i,j)=>{const a=PL(id).days[i][j].s;a.push(a.length?{...a[a.length-1]}:{a:10,b:0});save();render()};
 const rmPS=(id,i,j,k)=>{PL(id).days[i][j].s.splice(k,1);save();render()};
@@ -364,6 +414,10 @@ const dupPlan=id=>{const p=PL(id),n=uid();S.plans.push({id:n,n:p.n+' 2',days:JSO
 const dayAdd=(id,i,x)=>{if(!x)return;PL(id).days[i].push({e:x,s:dflt(x)});save();render()};
 const dayRm=(id,i,j)=>{PL(id).days[i].splice(j,1);save();render()};
 const rmPlan=id=>{S.plans=S.plans.filter(p=>p.id!=id);if(S.main==id)S.main=(S.plans[0]||{}).id||null;save();render()};
+const GRP={chest:'chest',shoulder:'shoulder',bicep:'arms',tricep:'arms',forearm:'arms',abs:'core',quads:'legs',hamstring:'legs',glutes:'legs',calf:'legs',trap:'back',back:'back',cardio:'cardio'};
+const GN={chest:['อก','Chest'],back:['หลัง','Back'],shoulder:['ไหล่','Shoulders'],arms:['แขน','Arms'],core:['หน้าท้อง','Core'],legs:['ขา','Legs'],cardio:['คาร์ดิโอ','Cardio'],other:['อื่นๆ','Other']};
+const grpOf=e=>GRP[mus(e)[0]]||'other';
+const exOpts=list=>{const L=S.lang=='th'?0:1;return Object.keys(GN).map(g=>{const a=list.filter(e=>grpOf(e)==g).sort((x,y)=>x.n.localeCompare(y.n));return a.length?`<optgroup label="${GN[g][L]}">${a.map(e=>`<option value="${e.id}">${esc(e.n)}</option>`).join('')}</optgroup>`:''}).join('')};
 let exM=[],exN='',exC='reps',exT='machine',exW='mid',exEd='';
 const WL={heavy:['หนัก','Heavy'],mid:['กลาง','Medium'],light:['เบา','Light']};
 function gEx(){
@@ -376,7 +430,7 @@ function gEx(){
  <div class="mut" style="margin:10px 0 2px">${T('กล้ามเนื้อที่โดน','Muscles worked')}</div>
  <div class="chips">${MUS.map(m=>`<button class="chip ${exM.includes(m)?'on':''}" onclick="togM('${m}')">${mn(m)}</button>`).join('')}</div>
  <button class="btn" style="width:100%;margin-top:8px" onclick="addEx()">${exEd?T('บันทึก','Save'):'+ '+T('เพิ่มท่า','Add exercise')}</button>${exEd?`<button class="ghost" style="width:100%;margin-top:6px" onclick="cancelEx()">${T('ยกเลิก','Cancel')}</button>`:''}</div>`+
- S.ex.map(e=>`<div class="card row"><span style="flex:1"><b>${esc(e.n)}</b><br><span class="mut">${mus(e).map(mn).join(', ')} · ${TYP[e.t][L]} · ${e.c=='time'?T('เวลา','time'):'reps+kg · '+WL[e.w||'mid'][L]}</span></span><button class="ghost" onclick="editEx('${e.id}')">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmEx('${e.id}')">×</button></div>`).join('');
+ Object.keys(GN).map(g=>{const a=S.ex.filter(e=>grpOf(e)==g).sort((x,y)=>x.n.localeCompare(y.n));return a.length?`<div class="mut" style="margin:14px 0 2px;font-weight:600">${GN[g][L]}</div>`+a.map(e=>`<div class="card row"><span style="flex:1"><b>${esc(e.n)}</b><br><span class="mut">${mus(e).map(mn).join(', ')} · ${TYP[e.t][L]} · ${e.c=='time'?T('เวลา','time'):'reps+kg · '+WL[e.w||'mid'][L]}</span></span><button class="ghost" onclick="editEx('${e.id}')">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmEx('${e.id}')">×</button></div>`).join(''):''}).join('');
 }
 const keepEx=()=>{exN=val('en');exC=val('ec');exT=val('et')};
 const togM=m=>{keepEx();exM=exM.includes(m)?exM.filter(x=>x!=m):[...exM,m];render()};
@@ -411,18 +465,29 @@ function gProg(){
  h+=`<div class="chips">${exs.map(e=>`<button class="chip ${pe==e.id?'on':''}" onclick="pe='${e.id}';render()">${esc(e.n)}</button>`).join('')||`<span class="mut">${T('ยังไม่มีท่า','No exercises')}</span>`}</div>`;
  if(!pe)return h;
  const p=series(pe),e=exn(pe),u=e.c=='time'?'min/day':'kg (max)';
- if(p.length<2)return h+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
+ if(p.length<2)return h+prCard(pe)+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
  const W=320,H=160,mx=Math.max(...p.map(x=>x[1])),mi=Math.min(...p.map(x=>x[1])),r=(mx-mi)||1;
  const xy=p.map((x,i)=>[20+i*(W-40)/(p.length-1),H-20-(x[1]-mi)/r*(H-50)]);
- return h+sugCard(pe)+`<div class="card"><div class="mut">${esc(e.n)} — ${u}</div><svg viewBox="0 0 ${W} ${H}" width="100%"><polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(a=>a.join(',')).join(' ')}"/>${xy.map((a,i)=>`<circle cx="${a[0]}" cy="${a[1]}" r="4" fill="var(--ac)"/><text x="${a[0]}" y="${a[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${p[i][1]}</text>`).join('')}<text x="20" y="${H-4}" font-size="10" fill="var(--mut)">${p[0][0].slice(5)}</text><text x="${W-20}" y="${H-4}" font-size="10" text-anchor="end" fill="var(--mut)">${p[p.length-1][0].slice(5)}</text></svg></div>`;
+ return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut">${esc(e.n)} — ${u}</div><svg viewBox="0 0 ${W} ${H}" width="100%"><polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(a=>a.join(',')).join(' ')}"/>${xy.map((a,i)=>`<circle cx="${a[0]}" cy="${a[1]}" r="4" fill="var(--ac)"/><text x="${a[0]}" y="${a[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${p[i][1]}</text>`).join('')}<text x="20" y="${H-4}" font-size="10" fill="var(--mut)">${p[0][0].slice(5)}</text><text x="${W-20}" y="${H-4}" font-size="10" text-anchor="end" fill="var(--mut)">${p[p.length-1][0].slice(5)}</text></svg></div>`;
 }
 const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
 function streakN(){let n=0,i=trained(today())||S.skip[today()]?0:1;for(;i<400;i++){const d=back(i);if(trained(d))n++;else if(!S.skip[d])break}return n}
+let hd='';
+function dayHist(d){
+ const w=S.wk[d]||{},ids=Object.keys(w).filter(k=>w[k].length),wu=S.wu[d]||{};
+ return `<h2>${d==today()?T('วันนี้','Today'):d}</h2>${S.skip[d]?`<div class="mut">${T('พัก','Rest')}: ${esc(S.skip[d])}</div>`:''}`+
+ (ids.length?ids.map(id=>{const e=exn(id);return `<div class="card"><b>${esc(e.n)}</b>${(wu[id]||[]).map((s,k)=>`<div class="row mut"><span style="flex:1">${T('วอร์มอัป','Warm-up')} ${k+1}: ${fmt(e,s)}</span><button class="x" onclick="hRmW('${d}','${id}',${k})">×</button></div>`).join('')}${w[id].map((s,k)=>`<div class="row"><span class="mut" style="width:48px;flex:none">${T('เซ็ต','Set')} ${k+1}</span><input type="number" inputmode="decimal" value="${s.a}" placeholder="${e.c=='time'?'min':'reps'}" onchange="hSet('${d}','${id}',${k},'a',this.value)">${e.c=='time'?'':`<input type="number" inputmode="decimal" value="${s.b||''}" placeholder="kg" onchange="hSet('${d}','${id}',${k},'b',this.value)">`}<button class="x" onclick="hRm('${d}','${id}',${k})">×</button></div>`).join('')}</div>`}).join(''):`<p class="mut">${T('ไม่มีบันทึกออกกำลังกายวันนี้','No workout logged')}</p>`)+
+ `<div class="card"><div class="mut" style="margin-bottom:6px">${T('เพิ่มเซ็ตย้อนหลัง','Add a set to this day')}</div><select id="hx"><option value="">${T('เลือกท่า','Pick exercise')}</option>${exOpts(S.ex)}</select><div class="row" style="margin-top:8px"><input id="ha" type="number" inputmode="decimal" placeholder="reps / min"><input id="hb" type="number" inputmode="decimal" placeholder="kg"><button class="btn" onclick="hAdd('${d}')">+</button></div></div>`;
+}
+const hSet=(d,id,k,f,v)=>{S.wk[d][id][k][f]=+v;save()};
+function hRm(d,id,k){S.wk[d][id].splice(k,1);if(!S.wk[d][id].length)delete S.wk[d][id];if(!Object.keys(S.wk[d]).length)delete S.wk[d];save();render()}
+const hRmW=(d,id,k)=>{S.wu[d][id].splice(k,1);save();render()};
+function hAdd(d){const id=val('hx'),a=+val('ha'),b=+val('hb')||0;if(!id||!a)return;((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});save();render()}
 function gStreak(){
  const d=today(),sk=S.skip[d];
  return `<div class="card" style="text-align:center"><h1 style="font-size:52px">${streakN()}</h1><div class="mut">${T('วันต่อเนื่อง','day streak')}</div></div>
  <div class="card">${sk?`<div class="row"><span style="flex:1">${T('วันนี้พัก','Rest today')}: ${esc(sk)}</span><button class="x" onclick="delete S.skip['${d}'];save();render()">×</button></div>`:`<div class="row"><input id="sr" placeholder="${T('วันนี้ไม่ว่าง เพราะ…','Skipping today because…')}"><button class="btn" onclick="skipDay()">OK</button></div>`}</div>
- <div class="dots" style="flex-wrap:wrap">${[...Array(28).keys()].reverse().map(n=>{const x=back(n);return `<i title="${x}" class="${trained(x)?'on':S.skip[x]?'sk':''}"></i>`}).join('')}</div>
+ <div class="hgrid">${[...Array(28).keys()].reverse().map(n=>{const x=back(n);return `<button class="hb ${trained(x)?'on':S.skip[x]?'sk':''} ${(hd||today())==x?'sel':''}" onclick="hd='${x}';render()">${+x.slice(8)}</button>`}).join('')}</div>${dayHist(hd||today())}
  ${Object.keys(S.skip).sort().reverse().slice(0,5).map(x=>`<div class="mut">${x}: ${esc(S.skip[x])}</div>`).join('')}`;
 }
 function skipDay(){const r=val('sr').trim();if(!r)return;S.skip[today()]=r;save();render()}
