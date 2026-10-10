@@ -75,7 +75,7 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 <script>
 const K='helper_v1';let S={};
 try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
-S=Object.assign({user:null,logged:false,ses:{},wu:{},sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
+S=Object.assign({user:null,logged:false,ses:{},wu:{},snd:true,sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
@@ -226,16 +226,17 @@ function dayDetail(k,add){
 let toastT;const toast=t=>{const e=$('toast');if(!e)return;e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.display='none'},3500)};
 let wkOff=0;
 function weekCard(){
- const days=[...Array(7).keys()].map(i=>back(i+7*wkOff));
- let sets=0,cnt={};days.forEach(d=>Object.keys(S.wk[d]||{}).forEach(id=>{const n=S.wk[d][id].length;sets+=n;mus(exn(id)).forEach(m=>cnt[m]=(cnt[m]||0)+n)}));
+ const days=[...Array(7).keys()].map(i=>back(i+7*wkOff)),pdays=[...Array(7).keys()].map(i=>back(i+7*(wkOff+1)));
  const wd=days.filter(trained).length,fd=days.filter(d=>foodTotal(d)>0),avg=k=>fd.length?Math.round(fd.reduce((a,d)=>a+macT(d)[k],0)/fd.length):0;
- const bw=S.bw.filter(x=>days.includes(x.d)).sort((a,b)=>a.d<b.d?-1:1),dw=bw.length>1?bw[bw.length-1].w-bw[0].w:null;
- let td=0,tt=0;days.forEach(d=>tasksOn(d).forEach(t=>{tt++;if(isDone(t,d))td++}));
- const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,6),cell=(v,l)=>`<div class="stat" style="cursor:default"><b style="font-size:24px">${v}</b><span>${l}</span></div>`;
+ const wavg=ds=>{const a=S.bw.filter(x=>ds.includes(x.d));return a.length?a.reduce((t,x)=>t+x.w,0)/a.length:null};
+ const w1=wavg(days),w0=wavg(pdays),dw=w1!=null&&w0!=null?w1-w0:null;
+ const sl=S.sl.filter(e=>days.includes(e.d)),sa=sl.length?Math.round(sl.reduce((t,e)=>t+sdur(e),0)/sl.length):0;
+ const dg=S.goals.filter(g=>g.mode!='due'),gp=dg.length?Math.round(days.reduce((t,d)=>t+dg.reduce((u,g)=>u+Math.min(100,gv(g.id,d)),0)/dg.length,0)/7):null;
+ const cell=(v,l)=>`<div class="stat" style="cursor:default"><b style="font-size:24px">${v}</b><span>${l}</span></div>`;
+ const wv=w1==null?'-':w1.toFixed(1)+(dw==null?'':` <small style="font-size:12px;font-weight:500;color:var(--mut)">(${dw>0?'+':''}${dw.toFixed(1)})</small>`);
  return `<h2>${T('สรุปสัปดาห์','Weekly summary')}</h2><div class="seg s2"><button class="${wkOff?'':'on'}" onclick="wkOff=0;render()">${T('7 วันล่าสุด','Last 7 days')}</button><button class="${wkOff?'on':''}" onclick="wkOff=1;render()">${T('7 วันก่อนหน้า','Previous 7')}</button></div>
- <div class="grid3">${cell(wd+'/7',T('วันออกกำลัง','Workout days'))}${cell(sets,T('เซ็ตรวม','Total sets'))}${cell(td+'/'+tt,T('งานเสร็จ','Tasks done'))}</div>
- <div class="grid3" style="margin-top:8px">${cell(avg('k')||'-','kcal '+T('เฉลี่ย','avg'))}${cell(avg('p')?avg('p')+' g':'-',T('โปรตีนเฉลี่ย','Protein avg'))}${cell(dw==null?'-':(dw>0?'+':'')+dw.toFixed(1),T('น้ำหนัก kg','Weight kg'))}</div>
- ${top.length?`<div class="chips" style="margin-top:10px">${top.map(([m,n])=>`<span class="chip">${mn(m)} ${n}</span>`).join('')}</div>`:''}`;
+ <div class="grid3">${cell(wd+'/7',T('วันออกกำลัง','Workout days'))}${cell(sa?Math.floor(sa/60)+'h '+(sa%60)+'m':'-',T('นอนเฉลี่ย','Sleep avg'))}${cell(gp==null?'-':gp+'%',T('เป้าหมายรายวัน','Daily goal'))}</div>
+ <div class="grid3" style="margin-top:8px">${cell(avg('k')||'-','kcal '+T('เฉลี่ย','avg'))}${cell(avg('p')?avg('p')+' g':'-',T('โปรตีนเฉลี่ย','Protein avg'))}${cell(wv,T('น้ำหนักเฉลี่ย kg','Avg weight kg'))}</div>`;
 }
 function home(){
  const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','goal',T('เป้าหมาย','Goals')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
@@ -383,7 +384,7 @@ function gWork(){
  if(!items.length)return h+`<p class="mut">${T('วันนี้เป็นวันพักในแผนนี้ เลือกแผนอื่นหรือแก้แผนได้','Rest day in this plan. Pick another plan or edit it.')}</p>`;
  if(!ss)h+=`<button class="btn" style="width:100%;font-size:20px;padding:16px;margin:10px 0" onclick="startW()">${T('เริ่มออกกำลังกาย','Start workout')}</button>`;
  else if(ss.en)h+=`<div class="card row"><span style="flex:1">✓ ${T('เสร็จแล้ว','Finished')} · ${mm(ss.en-ss.st)} · ${Object.values(w).reduce((a,x)=>a+x.length,0)} ${T('เซ็ต','sets')}</span><button class="ghost" onclick="resumeW()">${T('เล่นต่อ','Resume')}</button></div>`;
- else h+=`<div class="card row"><b id="el" style="font-size:32px;flex:1">${mm(Date.now()-ss.st)}</b><button class="btn" onclick="doneW()">✓ ${T('เสร็จ','Done')}</button></div><div class="chips">${[30,60,90,120].map(x=>`<button class="chip ${restLen==x?'on':''}" onclick="restLen=${x};render()">${T('พัก','Rest')} ${x}s</button>`).join('')}</div>`;
+ else h+=`<div class="card row"><b id="el" style="font-size:32px;flex:1">${mm(Date.now()-ss.st)}</b><button class="btn" onclick="doneW()">✓ ${T('เสร็จ','Done')}</button></div><div class="chips">${[30,60,90,120].map(x=>`<button class="chip ${restLen==x?'on':''}" onclick="restLen=${x};render()">${T('พัก','Rest')} ${x}s</button>`).join('')}<button class="chip ${S.snd?'on':''}" onclick="togSnd()">${T('เสียงเตือน','Alarm')} ${S.snd?T('เปิด','on'):T('ปิด','off')}</button></div>`;
  const blocks=[];items.forEach(it=>{const b=blocks[blocks.length-1];if(it.g&&b&&b[0].g==it.g)b.push(it);else blocks.push([it])});
  return h+blocks.map(b=>{
   const lens=b.map(it=>(w[it.e]||[]).length),lo=Math.min(...lens),cur=act?lens.indexOf(lo):-1,sp=b.length>1;
@@ -505,7 +506,13 @@ const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
 function streakN(){let n=0,i=trained(today())||S.skip[today()]?0:1;for(;i<400;i++){const d=back(i);if(trained(d))n++;else if(!S.skip[d])break}return n}
 const FLAME='M44 2C58 10 68 28 69 44C70 52 70 58 72 62C74 52 80 44 85 39C94 50 100 64 100 80C100 108 80 130 50 130C20 130 0 108 0 84C-2 66 10 48 22 36C32 26 40 14 44 2Z';
 const HEART=h=>`<svg viewBox="0 0 100 90" height="${h}" width="${Math.round(h*100/90)}"><defs><mask id="bkm"><rect width="100" height="90" fill="#fff"/><path d="M52 4L44 28L58 44L46 62L54 92" stroke="#000" stroke-width="7" fill="none" stroke-linejoin="round" stroke-linecap="round"/></mask></defs><path mask="url(#bkm)" fill="currentColor" d="M50 85C20 62 2 44 2 26C2 12 13 3 26 3C36 3 45 8 50 16C55 8 64 3 74 3C87 3 98 12 98 26C98 44 80 62 50 85Z"/></svg>`;
-const streakHTML=(fs,h)=>{const n=streakN(),f=n>99?fs*.7:fs;return `<div class="sk"><b style="font-size:${f}px">${n}</b>${n?`<svg viewBox="0 0 100 130" height="${h}" width="${Math.round(h*100/130)}"><path d="${FLAME}" fill="currentColor"/></svg>`:HEART(Math.round(h*.8))}</div>`};
+const streakHTML=fs=>{const h=Math.round(fs*.8),n=streakN(),f=n>99?fs*.7:fs;return `<div class="sk"><b style="font-size:${f}px">${n}</b>${n?`<svg viewBox="0 0 100 130" height="${h}" width="${Math.round(h*100/130)}"><path d="${FLAME}" fill="currentColor"/></svg>`:HEART(Math.round(h*.9))}</div>`};
+function trainSummary(){
+ const days=[...Array(7).keys()].map(i=>back(i+7*wkOff));let sets=0,cnt={};
+ days.forEach(d=>Object.keys(S.wk[d]||{}).forEach(id=>{const n=S.wk[d][id].length;sets+=n;mus(exn(id)).forEach(m=>cnt[m]=(cnt[m]||0)+n)}));
+ const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+ return `<div class="seg s2"><button class="${wkOff?'':'on'}" onclick="wkOff=0;render()">${T('7 วันล่าสุด','Last 7 days')}</button><button class="${wkOff?'on':''}" onclick="wkOff=1;render()">${T('7 วันก่อนหน้า','Previous 7')}</button></div><div class="card"><div class="row"><b style="font-size:26px;flex:1">${sets}</b><span class="mut">${T('เซ็ตรวม','total sets')}</span></div>${top.length?`<div class="chips">${top.map(([m,n])=>`<span class="chip">${mn(m)} ${n}</span>`).join('')}</div>`:''}</div>`;
+}
 let hd='';
 let edK='';
 function dayHist(d){
@@ -520,16 +527,20 @@ const hRmW=(d,id,k)=>{S.wu[d][id].splice(k,1);save();render()};
 function hAdd(d){const id=val('hx'),a=+val('ha'),b=+val('hb')||0;if(!id||!a)return;((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});save();render()}
 function gStreak(){
  const d=today(),sk=S.skip[d];
- return `<div class="card" style="text-align:center">${streakHTML(76,96)}<div class="mut" style="margin-top:6px">${T('วันต่อเนื่อง','day streak')}</div></div>
+ return `<div class="card" style="text-align:center">${streakHTML(76,96)}<div class="mut" style="margin-top:6px">${T('วันต่อเนื่อง','day streak')}</div></div>${trainSummary()}
  <div class="card">${sk?`<div class="row"><span style="flex:1">${T('วันนี้พัก','Rest today')}: ${esc(sk)}</span><button class="x" onclick="delete S.skip['${d}'];save();render()">×</button></div>`:`<div class="row"><input id="sr" placeholder="${T('วันนี้ไม่ว่าง เพราะ…','Skipping today because…')}"><button class="btn" onclick="skipDay()">OK</button></div>`}</div>
  <div class="hgrid">${[...Array(28).keys()].reverse().map(n=>{const x=back(n);return `<button class="hb ${trained(x)?'on':S.skip[x]?'sk':''} ${(hd||today())==x?'sel':''}" onclick="hd='${x}';render()">${+x.slice(8)}</button>`}).join('')}</div>${dayHist(hd||today())}
  ${Object.keys(S.skip).sort().reverse().slice(0,5).map(x=>`<div class="mut">${x}: ${esc(S.skip[x])}</div>`).join('')}`;
 }
 function skipDay(){const r=val('sr').trim();if(!r)return;S.skip[today()]=r;save();render()}
 /* Rest timer */
+let AC=null;
+function unlockAudio(){try{const C=typeof AudioContext!='undefined'?AudioContext:typeof webkitAudioContext!='undefined'?webkitAudioContext:null;if(!C)return;AC=AC||new C();if(AC.state=='suspended')AC.resume()}catch(e){}}
+function beep(){if(!S.snd||!AC)return;try{[0,.25,.5].forEach(t=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.25;o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.15)})}catch(e){}}
+const togSnd=()=>{S.snd=!S.snd;save();unlockAudio();if(S.snd)beep();render()};
 function rest(s){clearInterval(rt);if(!s){$('rest').style.display='none';return}
- const end=Date.now()+s*1000;$('rest').style.display='block';
- const tick=()=>{const l=Math.ceil((end-Date.now())/1000);if(l<=0){clearInterval(rt);$('rt').textContent=T('พักครบแล้ว!','Rest over!');try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}setTimeout(()=>{$('rest').style.display='none'},3000);return}
+ unlockAudio();const end=Date.now()+s*1000;$('rest').style.display='block';
+ const tick=()=>{const l=Math.ceil((end-Date.now())/1000);if(l<=0){clearInterval(rt);$('rt').textContent=T('พักครบแล้ว!','Rest over!');try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}beep();setTimeout(()=>{$('rest').style.display='none'},3000);return}
   $('rt').textContent=Math.floor(l/60)+':'+String(l%60).padStart(2,'0')};
  tick();rt=setInterval(tick,250)}
 /* Settings */
@@ -540,6 +551,7 @@ function settings(){
  <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#000000')}</div>
  <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
  <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
+ <div class="card row"><span style="flex:1"><b>${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b></span><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div>
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
  <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
  <div class="card"><b>${T('สำรองข้อมูล','Backup')}</b><p class="mut">${T('คัดลอกข้อมูลไปอีกเครื่องด้วยมือ','Copy your data to another device manually')}</p>
