@@ -66,6 +66,7 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 .s3{grid-template-columns:repeat(3,1fr)}.ed{background:none;border:0;color:var(--fg);font:inherit;text-align:left;padding:6px 0;cursor:pointer;flex:1}
 .sk{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--fg)}.sk b{line-height:1;font-weight:700}.sk svg{display:block;flex:none}
 .grid3 .stat{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.warn{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--fg);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
 </style>
 </head>
 <body>
@@ -79,11 +80,14 @@ S=Object.assign({user:null,logged:false,ses:{},wu:{},snd:true,sl:[],sgoal:8,sp:n
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
-const save=()=>{S.ts=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}clearTimeout(syncT);syncT=setTimeout(push,1500)};
+let saveFail=false,USED=0,QUOTA=5e6,bnHide=false;
+function store(){const j=JSON.stringify(S);USED=j.length;try{localStorage.setItem(K,j);saveFail=false}catch(e){saveFail=true}}
+const save=()=>{S.ts=Date.now();store();clearTimeout(syncT);syncT=setTimeout(push,1500)};
+try{USED=(localStorage.getItem(K)||'').length}catch(e){}
 const SB_URL='https://wgpvgmnsrencoxogevti.supabase.co',SB_KEY='sb_publishable_FzYwg0GyqtgjbchTEwCpDA_IRO2Wo6I';
 const sb=(window.supabase&&supabase.createClient)?supabase.createClient(SB_URL,SB_KEY):null;
 let UID=null,EM='',SYNC='',REC=false,busy=false;
-const persist=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const persist=store;
 const hasData=()=>S.tasks.length||S.goals.length||S.food.length||S.bw.length||S.plans.length||Object.keys(S.wk).length||S.ex.length>4;
 async function push(){if(!sb||!UID)return;try{const {error}=await sb.from('app_state').upsert({user_id:UID,data:S,updated_at:new Date().toISOString()});SYNC=error?'err':'ok'}catch(e){SYNC='err'}}
 async function pull(){
@@ -136,7 +140,7 @@ function render(){
  else if(V=='gym')h=gym();
  else if(V=='food')h=food();
  else if(V=='set')h=settings();
- $('app').innerHTML=h;
+ $('app').innerHTML=banner()+h;
 }
 let aMode='in',aMsg='',aE='';
 const say=t=>{aMsg=t;const m=$('am');if(m)m.textContent=t};
@@ -296,8 +300,7 @@ function sleepView(){
  const avgW=r7.length?hmS(Math.round(r7.reduce((t,e)=>t+tmin(e.wake),0)/r7.length)):'-';
  const cell=(v,l)=>`<div class="stat" style="cursor:default"><b style="font-size:20px">${v}</b><span>${l}</span></div>`;
  let ch='';
- if(a.length>=2){const q=a.slice(-14),W=320,H=150,mx=Math.max(g,...q.map(sdur))*1.15,bw=(W-30)/q.length,Y=m=>H-22-m/mx*(H-42);
-  ch=`<div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%"><line x1="10" x2="${W-10}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/>${q.map((e,i)=>{const m=sdur(e),x=15+i*bw;return `<rect x="${x+bw*.15}" y="${Y(m)}" width="${bw*.7}" height="${H-22-Y(m)}" rx="3" fill="var(--ac)" opacity="${m>=g?1:.55}"/><text x="${x+bw/2}" y="${H-8}" font-size="9" text-anchor="middle" fill="var(--mut)">${+e.d.slice(8)}</text>`}).join('')}<text x="${W-10}" y="${Y(g)-4}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${S.sgoal||8} ${T('ชม.','h')}</text></svg></div>`}
+ if(a.length>=2){const q=agg(inRange(a.map(e=>[e.d,+(sdur(e)/60).toFixed(1)])),'avg');ch=`<div class="card"><div class="mut" style="margin-bottom:6px">${T('ชั่วโมงนอน','Sleep hours')}</div>${rangeBar()}${chartSVG(q.p,{goal:S.sgoal||8})}${aggNote(q.w,'avg')}</div>`}
  const sp=S.sp,lab=(t)=>`<span class="mut" style="flex:none;width:84px">${t}</span>`;
  return `<div class="card"><div class="mut">${T('คืนล่าสุด','Last night')}</div><b style="font-size:30px">${last?fdur(sdur(last)):'-'}</b>${last?`<div class="mut">${last.bed} → ${last.wake} · ${last.d}</div><div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,sdur(last)/g*100)}%"></i></div>`:''}</div>
  <div class="grid3">${cell(avgD?fdur(avgD):'-',T('เฉลี่ย 7 คืน','7-night avg'))}${cell(avgB,T('เวลานอนเฉลี่ย','Avg bedtime'))}${cell(avgW,T('เวลาตื่นเฉลี่ย','Avg wake'))}</div>
@@ -313,8 +316,7 @@ const rmSleep=d=>{S.sl=S.sl.filter(x=>x.d!=d);save();render()};
 function weightView(){
  const a=[...S.bw].sort((x,y)=>x.d<y.d?-1:1),n=a.length,last=a[n-1],pv=a[n-2],f=v=>(v>0?'+':'')+v.toFixed(1)+' kg';
  let ch='';
- if(n>=2){const q=a.slice(-30),W=320,H=160,g=S.bgoal||0,vs=q.map(x=>x.w).concat(g?[g]:[]),mx=Math.max(...vs),mi=Math.min(...vs),r=(mx-mi)||1,Y=v=>H-24-(v-mi)/r*(H-54),xy=q.map((x,i)=>[20+i*(W-40)/(q.length-1),Y(x.w)]);
-  ch=`<div class="card"><svg viewBox="0 0 ${W} ${H}" width="100%">${g?`<line x1="20" x2="${W-20}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/><text x="${W-20}" y="${Y(g)-5}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${g}</text>`:''}<polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(c=>c.join(',')).join(' ')}"/>${xy.map((c,i)=>`<circle cx="${c[0]}" cy="${c[1]}" r="3.5" fill="var(--ac)"/>${i==0||i==xy.length-1?`<text x="${c[0]}" y="${c[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${q[i].w}</text>`:''}`).join('')}<text x="20" y="${H-6}" font-size="10" fill="var(--mut)">${q[0].d.slice(5)}</text><text x="${W-20}" y="${H-6}" font-size="10" text-anchor="end" fill="var(--mut)">${q[q.length-1].d.slice(5)}</text></svg></div>`}
+ if(n>=2){const g=agg(inRange(a.map(x=>[x.d,x.w])),'avg');ch=`<div class="card">${rangeBar()}${chartSVG(g.p,{goal:S.bgoal||0})}${aggNote(g.w,'avg')}</div>`}
  return `<div class="card"><div class="row"><b style="font-size:30px;flex:1">${last?last.w+' kg':'—'}</b>${pv?`<span class="mut">${f(last.w-pv.w)}</span>`:''}</div>
  ${n>1?`<div class="mut">${T('ตั้งแต่เริ่ม','Since start')} ${f(last.w-a[0].w)}</div>`:''}${S.bgoal&&last?`<div class="mut">${T('เป้าหมาย','Goal')} ${S.bgoal} kg · ${T('เหลือ','Left')} ${Math.abs(last.w-S.bgoal).toFixed(1)} kg</div>`:''}
  <div class="row" style="margin-top:10px"><input id="bd" type="date" value="${today()}"><input id="bw" type="number" inputmode="decimal" step="0.1" placeholder="kg" value="${last?last.w:''}"></div>
@@ -471,6 +473,66 @@ const editEx=id=>{const e=exn(id);exEd=id;exN=e.n;exC=e.c;exT=e.t;exW=e.w||'mid'
 const cancelEx=()=>{exN='';exM=[];exEd='';exW='mid';render()};
 function addEx(){const n=val('en').trim();if(!n)return;if(!exM.length)return alert(T('เลือกกล้ามเนื้ออย่างน้อย 1 ส่วน','Pick at least one muscle'));const o={n,c:val('ec'),t:val('et'),w:exW,ms:exM.slice()};if(exEd)Object.assign(exn(exEd),o);else S.ex.push({id:uid(),...o});exN='';exM=[];exEd='';exW='mid';save();render()}
 const rmEx=id=>{S.ex=S.ex.filter(e=>e.id!=id);S.plans.forEach(p=>p.days=p.days.map(a=>a.filter(i=>i.e!=id)));save();render()};
+const RNG_OPT=[['1m',30,'1 เดือน','1 mo'],['3m',91,'3 เดือน','3 mo'],['6m',182,'6 เดือน','6 mo'],['1y',365,'1 ปี','1 yr'],['all',0,'ทั้งหมด','All']];
+let cr='3m';
+const rangeBar=()=>`<div class="seg s5">${RNG_OPT.map(r=>`<button class="${cr==r[0]?'on':''}" onclick="cr='${r[0]}';render()">${S.lang=='th'?r[2]:r[3]}</button>`).join('')}</div>`;
+const inRange=pts=>{const o=RNG_OPT.find(r=>r[0]==cr);return o[1]?pts.filter(x=>x[0]>=back(o[1])):pts};
+const weekKey=d=>{const t=new Date(d+'T00:00');t.setDate(t.getDate()-(t.getDay()+6)%7);return iso(t)};
+function agg(pts,mode){if(pts.length<=60)return {p:pts,w:false};const m={};pts.forEach(([d,v])=>{(m[weekKey(d)]=m[weekKey(d)]||[]).push(v)});
+ return {w:true,p:Object.keys(m).sort().map(k=>[k,mode=='max'?Math.max(...m[k]):+(m[k].reduce((a,b)=>a+b,0)/m[k].length).toFixed(1)])}}
+const aggNote=(w,mode)=>w?`<div class="mut" style="margin-top:6px">${T('รวมเป็นรายสัปดาห์ ','Weekly points. ')}${mode=='max'?T('ใช้ค่าสูงสุดของสัปดาห์','best of each week'):T('ใช้ค่าเฉลี่ยของสัปดาห์','weekly average')}</div>`:'';
+function chartSVG(pts,o){
+ const n=pts.length;if(n<2)return `<p class="mut">${T('ในช่วงนี้มีข้อมูลไม่ถึง 2 จุด','Fewer than 2 data points in this range')}</p>`;
+ const W=320,H=170,P=28,g=o.goal||0,ys=pts.map(x=>x[1]),mxv=Math.max(...ys),vs=ys.concat(g?[g]:[]),mx=Math.max(...vs),mi=Math.min(...vs),r=(mx-mi)||1;
+ const X=i=>P+i*(W-2*P)/(n-1),Y=v=>H-30-(v-mi)/r*(H-66),mI=ys.indexOf(mxv);
+ const lab=[mI];if(Math.abs(X(n-1)-X(mI))>=40)lab.push(n-1);if(Math.abs(X(0)-X(mI))>=40&&(!lab.includes(n-1)||Math.abs(X(0)-X(n-1))>=40))lab.push(0);
+ const dr=n>40?2:n>20?3:3.5;
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%">${g?`<line x1="${P}" x2="${W-P}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/><text x="${W-P}" y="${Y(g)-5}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${g}</text>`:''}<polyline fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((x,i)=>X(i)+','+Y(x[1])).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x[1])}" r="${dr}" fill="var(--ac)"/>`).join('')}<circle cx="${X(mI)}" cy="${Y(mxv)}" r="6.5" fill="none" stroke="var(--ac)" stroke-width="1.5"/>${lab.map(i=>`<text x="${X(i)}" y="${Y(ys[i])-11}" font-size="11" font-weight="${i==mI?700:400}" text-anchor="middle" fill="var(--fg)">${ys[i]}</text>`).join('')}<text x="${P}" y="${H-6}" font-size="10" fill="var(--mut)">${pts[0][0]}</text><text x="${W-P}" y="${H-6}" font-size="10" text-anchor="end" fill="var(--mut)">${pts[n-1][0]}</text></svg>`;
+}
+const pctUse=()=>Math.min(100,Math.round((USED+4000)/QUOTA*100));
+function banner(){
+ if(['boot','auth','newpw','cover'].includes(V))return '';
+ if(saveFail)return `<div class="warn"><div style="flex:1">${T('บันทึกลงเครื่องไม่สำเร็จ ข้อมูลล่าสุดอาจหายถ้าปิดแอป ส่งออกไฟล์สำรองตอนนี้','Saving to this device failed. Recent data may be lost if you close the app. Export a backup now.')}</div><button class="ghost" onclick="exportFile()">${T('ส่งออก','Export')}</button><button class="ghost" onclick="go('set')">${T('ตั้งค่า','Settings')}</button></div>`;
+ if(!bnHide&&pctUse()>=70)return `<div class="warn"><div style="flex:1">${T('พื้นที่เก็บข้อมูลในเครื่องใช้ไป ','Device storage is ')}${pctUse()}%${T(' ควรสำรองและย้ายข้อมูลเก่า',' full. Back up and archive old data.')}</div><button class="ghost" onclick="go('set')">${T('จัดการ','Manage')}</button><button class="x" onclick="bnHide=true;render()">×</button></div>`;
+ return '';
+}
+function probeQuota(){try{let used=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k=='__probe')continue;used+=k.length+(localStorage.getItem(k)||'').length}
+ let cur='',ok=0,step=1<<20;localStorage.removeItem('__probe');
+ while(step>=1024&&ok<12e6){const c='x'.repeat(step);try{localStorage.setItem('__probe',cur+c);cur+=c;ok+=step}catch(e){step>>=1}}
+ localStorage.removeItem('__probe');return used+ok}catch(e){return 5e6}}
+async function saveFile(text,name){
+ try{const f=new File([text],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return true}}catch(e){if(e&&e.name=='AbortError')return false}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);return true}catch(e){return false}
+}
+const exportFile=()=>saveFile(JSON.stringify(S),'versa-backup-'+today()+'.json');
+const cutoff=()=>{const d=new Date();d.setFullYear(d.getFullYear()-1);return iso(d)};
+function oldData(del,c0){
+ const c=c0||cutoff(),A={wk:{},wu:{},ses:{},skip:{},food:[],sl:[],bw:[],tasks:[],glog:{},dn:{}};let n=0;
+ ['wk','wu','ses','skip'].forEach(k=>Object.keys(S[k]||{}).forEach(d=>{if(d<c){A[k][d]=S[k][d];n++;if(del)delete S[k][d]}}));
+ [['food',x=>x.d<c],['sl',x=>x.d<c],['bw',x=>x.d<c],['tasks',t=>!t.r&&t.d<c&&t.done]].forEach(([k,f])=>{A[k]=S[k].filter(f);n+=A[k].length;if(del)S[k]=S[k].filter(x=>!f(x))});
+ S.goals.filter(g=>g.mode!='due').forEach(g=>Object.keys(S.glog[g.id]||{}).forEach(d=>{if(d<c){(A.glog[g.id]=A.glog[g.id]||{})[d]=S.glog[g.id][d];n++;if(del)delete S.glog[g.id][d]}}));
+ S.tasks.filter(t=>t.r&&t.dn).forEach(t=>Object.keys(t.dn).forEach(d=>{if(d<c){(A.dn[t.id]=A.dn[t.id]||{})[d]=t.dn[d];n++;if(del)delete t.dn[d]}}));
+ return {A,n,c}}
+let ARC=null;
+async function archiveMake(){const o=oldData(false);if(!o.n)return;const ok=await saveFile(JSON.stringify({type:'versa-archive',version:1,cutoff:o.c,created:today(),data:o.A}),'versa-archive-'+o.c+'.json');
+ if(ok){ARC={c:o.c};render()}else alert(T('ยังไม่ได้บันทึกไฟล์','The file was not saved'))}
+function archiveDelete(){if(!ARC)return;if(!confirm(T('ลบข้อมูลเก่ากว่า 1 ปีออกจากแอป ยืนยันว่าเก็บไฟล์ไว้แล้ว','Delete data older than 1 year from the app? Confirm the file is stored.')))return;oldData(true,ARC.c);ARC=null;save();render()}
+function storageCard(){
+ const o=oldData(false),pc=pctUse();
+ return `<div class="card"><b>${T('พื้นที่เก็บข้อมูล','Storage')}</b><div class="bar" style="margin:8px 0"><i style="width:${pc}%"></i></div><div class="mut">${pc}% · ${Math.round(USED/1024)} KB / ${Math.round(QUOTA/1024)} KB</div>
+ <div class="mut" style="margin-top:10px">${T('ข้อมูลเก่ากว่า 1 ปี','Data older than 1 year')}: ${o.n} ${T('รายการ','items')}</div>
+ <button class="btn" style="width:100%;margin-top:6px" ${o.n?'':'disabled'} onclick="archiveMake()">${T('สร้างไฟล์สำรองข้อมูลเก่า','Create archive of old data')}</button>
+ ${ARC?`<div class="mut" style="margin-top:8px">${T('เก็บไฟล์เรียบร้อยแล้วค่อยลบ ข้อมูลที่ลบจะอยู่ในไฟล์เท่านั้น และสถิติ PR ก่อนหน้านั้นจะไม่ถูกนับอีก','Delete only after the file is stored. Deleted data will exist only in the file, and older PRs will no longer be counted.')}</div><button class="ghost" style="width:100%;margin-top:6px" onclick="archiveDelete()">${T('ลบข้อมูลเก่าออกจากแอป','Delete old data from the app')}</button>`:''}</div>`;
+}
+function importFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
+ if(o.type=='versa-archive'){const D=o.data||{};
+  ['wk','wu','ses','skip'].forEach(k=>{S[k]=Object.assign({},D[k]||{},S[k]||{})});
+  [['food','id'],['sl','d'],['bw','d']].forEach(([k,key])=>{const have=new Set(S[k].map(x=>x[key]));(D[k]||[]).forEach(x=>{if(!have.has(x[key]))S[k].push(x)})});
+  const ids=new Set(S.tasks.map(t=>t.id));(D.tasks||[]).forEach(t=>{if(!ids.has(t.id))S.tasks.push(t)});
+  Object.keys(D.glog||{}).forEach(id=>{S.glog[id]=Object.assign({},D.glog[id],S.glog[id]||{})});
+  Object.keys(D.dn||{}).forEach(id=>{const t=S.tasks.find(x=>x.id==id);if(t)t.dn=Object.assign({},D.dn[id],t.dn||{})});
+ }else{if(!confirm(T('นำเข้าจะทับข้อมูลปัจจุบัน','Importing will overwrite current data')))return;S=Object.assign(S,o)}
+ S.user=S.user||{n:'me'};save();render();alert(T('นำเข้าแล้ว','Imported'))}catch(e){alert(T('ไฟล์ไม่ถูกต้อง','Invalid file'))}};r.readAsText(f);inp.value=''}
 function series(id){
  const e=exn(id),pts=[];
  Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;
@@ -498,9 +560,8 @@ function gProg(){
  if(!pe)return h;
  const p=series(pe),e=exn(pe),u=e.c=='time'?'min/day':'kg (max)';
  if(p.length<2)return h+prCard(pe)+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
- const W=320,H=160,mx=Math.max(...p.map(x=>x[1])),mi=Math.min(...p.map(x=>x[1])),r=(mx-mi)||1;
- const xy=p.map((x,i)=>[20+i*(W-40)/(p.length-1),H-20-(x[1]-mi)/r*(H-50)]);
- return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut">${esc(e.n)} — ${u}</div><svg viewBox="0 0 ${W} ${H}" width="100%"><polyline fill="none" stroke="var(--ac)" stroke-width="2.5" points="${xy.map(a=>a.join(',')).join(' ')}"/>${xy.map((a,i)=>`<circle cx="${a[0]}" cy="${a[1]}" r="4" fill="var(--ac)"/><text x="${a[0]}" y="${a[1]-9}" font-size="11" text-anchor="middle" fill="var(--fg)">${p[i][1]}</text>`).join('')}<text x="20" y="${H-4}" font-size="10" fill="var(--mut)">${p[0][0].slice(5)}</text><text x="${W-20}" y="${H-4}" font-size="10" text-anchor="end" fill="var(--mut)">${p[p.length-1][0].slice(5)}</text></svg></div>`;
+ const q=agg(inRange(p),'max');
+ return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut" style="margin-bottom:6px">${esc(e.n)} — ${u}</div>${rangeBar()}${chartSVG(q.p,{})}${aggNote(q.w,'max')}</div>`;
 }
 const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
 function streakN(){let n=0,i=trained(today())||S.skip[today()]?0:1;for(;i<400;i++){const d=back(i);if(trained(d))n++;else if(!S.skip[d])break}return n}
@@ -555,11 +616,14 @@ function settings(){
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
  <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
  <div class="card"><b>${T('สำรองข้อมูล','Backup')}</b><p class="mut">${T('คัดลอกข้อมูลไปอีกเครื่องด้วยมือ','Copy your data to another device manually')}</p>
- <textarea id="bk" placeholder="${T('สำรอง/ย้ายข้อมูลด้วยมือ','Manual backup / transfer')}"></textarea><div class="row"><button class="ghost" onclick="$('bk').value=JSON.stringify(S)">${T('ส่งออก','Export')}</button><button class="ghost" onclick="impD()">${T('นำเข้า','Import')}</button></div></div>
+ <textarea id="bk" placeholder="${T('สำรอง/ย้ายข้อมูลด้วยมือ','Manual backup / transfer')}"></textarea><div class="row"><button class="ghost" onclick="$('bk').value=JSON.stringify(S)">${T('ส่งออก','Export')}</button><button class="ghost" onclick="impD()">${T('นำเข้า','Import')}</button></div>
+ <div class="row"><button class="ghost" onclick="exportFile()">${T('ส่งออกเป็นไฟล์','Export as file')}</button><label class="ghost" style="cursor:pointer;text-align:center">${T('นำเข้าจากไฟล์','Import file')}<input type="file" accept=".json,application/json" style="display:none" onchange="importFile(this)"></label></div></div>
+ ${storageCard()}
  <div class="card"><b>${T('ชื่อ','Name')}</b><div class="row" style="margin-top:8px"><input id="un" value="${esc(S.user.n)}"><button class="btn" onclick="S.user.n=val('un').trim()||S.user.n;save();render()">OK</button></div></div>
  <div class="card row"><span style="flex:1">${esc(EM)}<br><span class="mut">${SYNC=='ok'?T('ซิงค์แล้ว','Synced'):SYNC=='err'?T('ซิงค์ไม่สำเร็จ','Sync error'):''}</span></span><button class="ghost" onclick="syncNow()">${T('ซิงค์','Sync')}</button><button class="ghost" onclick="logout()">${T('ออกจากระบบ','Log out')}</button></div>`;
 }
 function impD(){try{const o=JSON.parse(val('bk'));S=Object.assign(S,o);S.logged=true;save();render()}catch(e){alert(T('ข้อมูลไม่ถูกต้อง','Invalid data'))}}
+setTimeout(()=>{const b=banner();QUOTA=probeQuota();if(banner()!==b)render()},3000);
 render();boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
