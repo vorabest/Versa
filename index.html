@@ -67,11 +67,14 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 .sk{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--fg)}.sk b{line-height:1;font-weight:700}.sk svg{display:block;flex:none}
 .grid3 .stat{display:flex;flex-direction:column;align-items:center;justify-content:center}
 .warn{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--fg);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+#dlg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:24px}.dbox{background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:16px;padding:18px;max-width:340px;width:100%}.dbox p{margin:0 0 14px}
+.sm{padding:4px 10px;font-size:13px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="toast"></div>
+<div id="dlg"></div>
 <div id="rest"><div class="in"><b id="rt">0:00</b><button class="ghost" onclick="rest(0)">Stop</button></div></div>
 <script>
 const K='helper_v1';let S={};
@@ -98,7 +101,7 @@ async function pull(){
   if(!data){S.uid=UID;save();await push();return}
   const r=data.data||{},apply=()=>{S=Object.assign({},S,r);S.uid=UID;persist()};
   if(S.uid==UID){if((r.ts||0)>(S.ts||0))apply();else if((S.ts||0)>(r.ts||0))await push()}
-  else if(!hasData()||confirm(T('มีข้อมูลบนเซิร์ฟเวอร์แล้ว ตกลง = ใช้ข้อมูลจากเซิร์ฟเวอร์ ยกเลิก = ใช้ข้อมูลในเครื่องนี้','Server already has data. OK = use server data, Cancel = use this device')))apply();
+  else if(!hasData()||await askP(T('มีข้อมูลบนเซิร์ฟเวอร์แล้ว ตกลง = ใช้ข้อมูลจากเซิร์ฟเวอร์ ยกเลิก = ใช้ข้อมูลในเครื่องนี้','Server already has data. OK = use server data, Cancel = use this device')))apply();
   else{S.uid=UID;save();await push()}
   SYNC='ok'
  }catch(e){SYNC='err'}
@@ -190,8 +193,8 @@ async function boot(){
  render();
 }
 async function logout(){
- if(!confirm(T('ออกจากระบบ ข้อมูลในเครื่องนี้จะถูกล้าง ข้อมูลบนเซิร์ฟเวอร์ยังอยู่','Log out? Data on this device will be cleared. The server copy stays.')))return;
- await push();if(SYNC=='err')return alert(T('ซิงค์ไม่สำเร็จ จึงยังไม่ออกจากระบบ','Sync failed, so you were not logged out'));
+ if(!await askP(T('ออกจากระบบ ข้อมูลในเครื่องนี้จะถูกล้าง ข้อมูลบนเซิร์ฟเวอร์ยังอยู่','Log out? Data on this device will be cleared. The server copy stays.')))return;
+ await push();if(SYNC=='err')return toast(T('ซิงค์ไม่สำเร็จ จึงยังไม่ออกจากระบบ','Sync failed, so you were not logged out'));
  try{await sb.auth.signOut()}catch(e){}try{localStorage.removeItem(K)}catch(e){}location.reload();
 }
 async function syncNow(){await pull();render()}
@@ -227,6 +230,10 @@ function dayDetail(k,add){
  <input id="qt" placeholder="${T('หัวข้อ','Topic')}" value="${esc(dT)}" style="margin:8px 0"><textarea id="qn" placeholder="${T('เนื้อหา / รายละเอียด','Details')}">${esc(dN)}</textarea><select id="qr" style="margin-top:8px"><option value="" ${dR==''?'selected':''}>${T('ไม่ซ้ำ','No repeat')}</option>${Object.keys(RL).map(k=>`<option value="${k}" ${dR==k?'selected':''}>${T('ซ้ำ','Repeat')} ${RL[k][S.lang=='th'?0:1]}</option>`).join('')}</select><button class="btn" style="width:100%;margin-top:8px" onclick="addTask()">+ ${T('เพิ่มงาน','Add task')}</button></div>`:'';
  return `<h2>${k==today()?T('วันนี้','Today'):k}</h2>`+form+list+(info?`<div class="mut">${info}</div>`:'');
 }
+let dlgRes=null;
+const askP=(msg,okl)=>new Promise(r=>{dlgRes=r;const e=$('dlg');e.innerHTML=`<div class="dbox"><p>${esc(msg)}</p><div class="row"><button class="ghost" style="flex:1" onclick="dlgDone(0)">${T('ยกเลิก','Cancel')}</button><button class="btn" style="flex:1" onclick="dlgDone(1)">${okl||T('ตกลง','OK')}</button></div></div>`;e.style.display='flex'});
+const askDel=msg=>askP(msg,T('ลบ','Delete'));
+function dlgDone(ok){$('dlg').style.display='none';const r=dlgRes;dlgRes=null;if(r)r(!!ok)}
 let toastT;const toast=t=>{const e=$('toast');if(!e)return;e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>{e.style.display='none'},3500)};
 let wkOff=0;
 function weekCard(){
@@ -235,7 +242,7 @@ function weekCard(){
  const wavg=ds=>{const a=S.bw.filter(x=>ds.includes(x.d));return a.length?a.reduce((t,x)=>t+x.w,0)/a.length:null};
  const w1=wavg(days),w0=wavg(pdays),dw=w1!=null&&w0!=null?w1-w0:null;
  const sl=S.sl.filter(e=>days.includes(e.d)),sa=sl.length?Math.round(sl.reduce((t,e)=>t+sdur(e),0)/sl.length):0;
- const dg=S.goals.filter(g=>g.mode!='due'),gp=dg.length?Math.round(days.reduce((t,d)=>t+dg.reduce((u,g)=>u+Math.min(100,gv(g.id,d)),0)/dg.length,0)/7):null;
+ const dg=S.goals.filter(g=>!isCum(g)&&!hasSubs(g)),gp=dg.length?Math.round(days.reduce((t,d)=>t+dg.reduce((u,g)=>u+Math.min(100,gv(g.id,d)),0)/dg.length,0)/7):null;
  const cell=(v,l)=>`<div class="stat" style="cursor:default"><b style="font-size:24px">${v}</b><span>${l}</span></div>`;
  const wv=w1==null?'-':w1.toFixed(1)+(dw==null?'':` <small style="font-size:12px;font-weight:500;color:var(--mut)">(${dw>0?'+':''}${dw.toFixed(1)})</small>`);
  return `<h2>${T('สรุปสัปดาห์','Weekly summary')}</h2><div class="seg s2"><button class="${wkOff?'':'on'}" onclick="wkOff=0;render()">${T('7 วันล่าสุด','Last 7 days')}</button><button class="${wkOff?'on':''}" onclick="wkOff=1;render()">${T('7 วันก่อนหน้า','Previous 7')}</button></div>
@@ -245,7 +252,7 @@ function weekCard(){
 function home(){
  const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','goal',T('เป้าหมาย','Goals')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
  const st=[['gym',streakHTML(30,38),T('streak วัน','Day streak'),"G='streak';"],['plan','<b>'+dueCount()+'</b>',T('งานค้าง/วันนี้','Tasks due')],['food','<b>'+foodTotal(today())+'</b>','kcal']];
- const gs=S.goals.filter(g=>g.mode!='due'||latest(g.id)<100);
+ const gs=S.goals.filter(g=>!isCum(g)||gval(g)<100);
  return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>
  <div class="nav5">${nav.map(n=>`<button onclick="go('${n[0]}')">${ico(n[1],30)}${n[2]}</button>`).join('')}</div>
  <div class="grid3">${st.map(x=>`<div class="stat" onclick="${x[3]||''}go('${x[0]}')">${x[1]}<span>${x[2]}</span></div>`).join('')}</div>
@@ -259,29 +266,55 @@ function planner(){
 }
 function addTask(){const t=val('qt').trim();if(!t)return;const r=val('qr');S.tasks.push({id:uid(),t,n:val('qn').trim(),d:selD,done:false,...(r?{r}:{})});dT='';dN='';dR='';save();render()}
 const tg=(id,k)=>{const t=S.tasks.find(x=>x.id==id);if(t.r){t.dn=t.dn||{};t.dn[k]=!t.dn[k]}else t.done=!t.done;save();render()};
-const rmTask=id=>{const t=S.tasks.find(x=>x.id==id);if(t&&t.r&&!confirm(T('ลบงานซ้ำนี้ทั้งชุด','Delete this whole repeating series')))return;S.tasks=S.tasks.filter(x=>x.id!=id);save();render()};
+async function rmTask(id){const t=S.tasks.find(x=>x.id==id);if(!await askDel(t&&t.r?T('ลบงานซ้ำนี้ทั้งชุด','Delete this whole repeating series'):T('ลบงาน "'+(t?t.t:'')+'"','Delete task "'+(t?t.t:'')+'"')))return;S.tasks=S.tasks.filter(x=>x.id!=id);save();render()}
 /* Goals */
 const gv=(id,d)=>(S.glog[id]||{})[d]||0;
 const latest=id=>{const o=S.glog[id]||{},k=Object.keys(o).filter(d=>d<=today()).sort();return k.length?o[k[k.length-1]]:0};
 const dleft=g=>Math.round((new Date(g.due+'T00:00')-new Date(today()+'T00:00'))/864e5);
-function gmeta(g){if(g.mode!='due')return T('รายวัน','Daily');const n=dleft(g);return n>=0?T('เหลือ '+n+' วัน',n+' days left'):T('เลยกำหนด '+(-n)+' วัน',(-n)+' days overdue')}
+function gmeta(g){if(g.mode=='none')return T('ไม่มีกำหนด','No deadline');if(g.mode!='due')return T('รายวัน','Daily');const n=dleft(g);return n>=0?T('เหลือ '+n+' วัน',n+' days left'):T('เลยกำหนด '+(-n)+' วัน',(-n)+' days overdue')}
+let gOpen='',cO={},ek='';
+const noteH=t=>`<div class="mut" style="white-space:pre-wrap;margin:4px 0">${esc(t)}</div>`;
+const subFind=(gid,cid,iid)=>{const g=GF(gid);if(!cid)return g;const c=g.subs.find(x=>x.id==cid);return iid?c.items.find(x=>x.id==iid):c};
+function edForm(gid,cid,iid){const o=subFind(gid,cid,iid),nm=cid?o.t:o.n;return `<div class="act"><input id="en_n" value="${esc(nm||'')}" placeholder="${T('ชื่อ','Name')}" style="margin-bottom:8px"><textarea id="en_o" placeholder="${T('โน้ต เช่น ส่วนที่ยังไม่แม่น','Note, e.g. parts I am unsure about')}" style="min-height:70px">${esc(o.note||'')}</textarea><div class="row" style="margin-top:8px"><button class="btn" style="flex:1" onclick="edSave('${gid}','${cid||''}','${iid||''}')">${T('บันทึก','Save')}</button><button class="ghost" onclick="ek='';render()">${T('ยกเลิก','Cancel')}</button></div></div>`}
+function edSave(gid,cid,iid){const o=subFind(gid,cid,iid||''),nm=val('en_n').trim();if(!cid){if(!nm)return;o.n=nm}else{if(!iid&&!nm)return;o.t=nm}o.note=val('en_o').trim();ek='';save();render()}
+const GF=id=>S.goals.find(g=>g.id==id);
+const hasSubs=g=>Array.isArray(g.subs);
+const leaves=g=>(g.subs||[]).flatMap(c=>c.items&&c.items.length?c.items:[c]);
+const gpct=g=>{const L=leaves(g);return L.length?Math.round(L.filter(x=>x.done).length/L.length*100):0};
+const isCum=g=>g.mode=='due'||g.mode=='none';
+const gval=g=>hasSubs(g)?gpct(g):(isCum(g)?latest(g.id):gv(g.id,today()));
+const KL={c:['เนื้อหา','Content'],p:['โจทย์','Problems'],o:['อื่นๆ','Other']};
+function subsHTML(g){
+ const L=S.lang=='th'?0:1;
+ return `<div class="sets">`+(g.subs||[]).map(c=>{const its=c.items||[],dn=its.filter(x=>x.done).length,tot=its.length||1,cd=its.length?dn:(c.done?1:0),op=cO[c.id];
+  return `<div class="act">${ek==g.id+'|'+c.id+'|'?edForm(g.id,c.id,''):`<div class="row"><button class="ed" onclick="cO['${c.id}']=!cO['${c.id}'];render()"><b>${esc(c.t)}</b> <span class="mut">${cd}/${tot} ${op?'▾':'▸'}</span></button>${its.length?'':`<input type="checkbox" ${c.done?'checked':''} onchange="subTg('${g.id}','${c.id}')">`}<button class="ghost sm" onclick="ek='${g.id}|${c.id}|';render()">${T('แก้ไข','Edit')}</button><button class="x" onclick="chRm('${g.id}','${c.id}')">×</button></div>${c.note?noteH(c.note):''}`}`+
+  (op?its.map(x=>ek==g.id+'|'+c.id+'|'+x.id?edForm(g.id,c.id,x.id):`<div class="row" style="align-items:flex-start"><input type="checkbox" ${x.done?'checked':''} onchange="subTg('${g.id}','${c.id}','${x.id}')"><div style="flex:1"><span class="${x.done?'done':''}">${x.t?`${esc(x.t)} <span class="mut">${KL[x.k||'o'][L]}</span>`:KL[x.k||'o'][L]}</span>${x.note?noteH(x.note):''}</div><button class="ghost sm" onclick="ek='${g.id}|${c.id}|${x.id}';render()">${T('แก้ไข','Edit')}</button><button class="x" onclick="itRm('${g.id}','${c.id}','${x.id}')">×</button></div>`).join('')+`<div class="row"><input id="it_${c.id}" placeholder="${T('เพิ่มรายการ','Add item')}" onkeydown="if(event.key=='Enter')itAdd('${g.id}','${c.id}')"><select id="ik_${c.id}" style="flex:0 0 96px"><option value="c">${KL.c[L]}</option><option value="p">${KL.p[L]}</option><option value="o">${KL.o[L]}</option></select><button class="btn" onclick="itAdd('${g.id}','${c.id}')">+</button></div>`:'')+`</div>`}).join('')+
+  `<div class="row"><input id="ch_${g.id}" placeholder="${T('เพิ่มบท / หัวข้อย่อย','Add chapter / sub-topic')}" onkeydown="if(event.key=='Enter')chAdd('${g.id}')"><button class="btn" onclick="chAdd('${g.id}')">+</button></div></div>`}
+const subsBlock=g=>{const L=leaves(g),d=L.filter(x=>x.done).length,o=gOpen==g.id;return `<div class="row" style="margin-top:8px"><button class="ghost" style="flex:1" onclick="gOpen='${o?'':g.id}';render()">${T('หัวข้อย่อย','Sub-topics')}${hasSubs(g)?' '+d+'/'+L.length:''} ${o?'▾':'▸'}</button></div>${o?subsHTML(g):''}`};
+function chAdd(id){const t=val('ch_'+id).trim();if(!t)return;const g=GF(id);(g.subs=g.subs||[]).push({id:uid(),t,done:false,items:[{id:uid(),t:'',k:'c',done:false},{id:uid(),t:'',k:'p',done:false}]});cO[g.subs[g.subs.length-1].id]=true;save();render()}
+function itAdd(gid,cid){const t=val('it_'+cid).trim();if(!t)return;const c=GF(gid).subs.find(x=>x.id==cid);(c.items=c.items||[]).push({id:uid(),t,k:val('ik_'+cid)||'o',done:false});save();render()}
+function subTg(gid,cid,iid){const c=GF(gid).subs.find(x=>x.id==cid);if(iid){const it=c.items.find(x=>x.id==iid);it.done=!it.done}else c.done=!c.done;save();render()}
+async function chRm(gid,cid){const g=GF(gid),c0=g.subs.find(x=>x.id==cid)||{};if(!await askDel(T('ลบบท "'+c0.t+'" รวมรายการในบท','Delete chapter "'+c0.t+'" with its items')))return;g.subs=g.subs.filter(x=>x.id!=cid);if(!g.subs.length&&!g.list)delete g.subs;save();render()}
+async function itRm(gid,cid,iid){const c=GF(gid).subs.find(x=>x.id==cid),x0=c.items.find(x=>x.id==iid)||{},nm=x0.t||KL[x0.k||'o'][S.lang=='th'?0:1];if(!await askDel(T('ลบรายการ "'+nm+'"','Delete item "'+nm+'"')))return;c.items=c.items.filter(x=>x.id!=iid);save();render()}
 function gctl(g){
- const due=g.mode=='due',v=due?latest(g.id):gv(g.id,today());
+ if(hasSubs(g)){const p=gpct(g),L=leaves(g),d=L.filter(x=>x.done).length;return `<div class="row"><div class="bar" style="flex:1"><i style="width:${p}%"></i></div><b>${p}%</b></div><div class="mut">${d}/${L.length} ${T('รายการเสร็จ','items done')}</div>`}
+ const due=isCum(g),v=due?latest(g.id):gv(g.id,today());
  return g.type=='check'?`<div class="row"><input type="checkbox" ${v>=100?'checked':''} onchange="setG('${g.id}',this.checked?100:0)"><span>${due?T('สำเร็จแล้ว','Completed'):T('ทำวันนี้แล้ว','Done today')}</span></div>`
  :`<div class="row"><input type="range" min="0" max="100" step="5" value="${v}" onchange="setG('${g.id}',+this.value)" oninput="this.nextElementSibling.textContent=this.value+'%'"><span style="width:44px;text-align:right">${v}%</span></div>`;
 }
 function goals(){
  const wk=n=>[6,5,4,3,2,1,0].map(i=>gv(n,back(i)));
  return head(T('เป้าหมาย','Goals'),0,'goal')+`<div class="card"><input id="gn" placeholder="${T('ชื่อเป้าหมาย','Goal name')}" style="margin-bottom:8px">
- <div class="row"><select id="gt"><option value="check">${T('แบบติ๊ก','Check-off')}</option><option value="bar">${T('แบบแถบ %','Slider %')}</option></select><select id="gm" onchange="$('gd').style.display=this.value=='due'?'':'none'"><option value="daily">${T('รายวัน','Daily')}</option><option value="due">${T('มีกำหนดส่ง','Deadline')}</option></select></div>
+ <div class="row"><select id="gt"><option value="check">${T('แบบติ๊ก','Check-off')}</option><option value="bar">${T('แบบแถบ %','Slider %')}</option><option value="list">${T('แบบหัวข้อย่อย','With sub-topics')}</option></select><select id="gm" onchange="$('gd').style.display=this.value=='due'?'':'none'"><option value="daily">${T('รายวัน','Daily')}</option><option value="due">${T('มีกำหนดส่ง','Deadline')}</option><option value="none">${T('ไม่มีกำหนด','No deadline')}</option></select></div>
  <div class="row"><input id="gd" type="date" value="${back(-7)}" style="display:none"><button class="btn" style="width:100%" onclick="addGoal()">+ ${T('เพิ่มเป้าหมาย','Add goal')}</button></div></div>`+
- (S.goals.map(g=>{const due=g.mode=='due',v=latest(g.id);let ex;
-  if(due)ex=`<div class="mut" style="margin-top:6px">${T('กำหนด','Due')} ${g.due} · ${v}%</div><div class="bar" style="margin-top:4px"><i style="width:${v}%"></i></div>`;
+ (S.goals.map(g=>{const due=g.mode=='due',v=gval(g);let ex;
+  if(hasSubs(g))ex=due?`<div class="mut" style="margin-top:6px">${T('กำหนด','Due')} ${g.due}</div>`:'';
+  else if(isCum(g))ex=`<div class="mut" style="margin-top:6px">${due?T('กำหนด','Due')+' '+g.due+' · ':''}${v}%</div><div class="bar" style="margin-top:4px"><i style="width:${v}%"></i></div>`;
   else{const days=wk(g.id),avg=Math.round(days.reduce((a,b)=>a+b,0)/7);ex=`<div class="dots">${days.map(x=>`<i class="${x>=100?'on':''}" style="${x>0&&x<100?'background:var(--ac);opacity:'+(x/100)+';':''}"></i>`).join('')}</div><div class="mut" style="margin-top:6px">${T('เฉลี่ย 7 วัน','7-day avg')} ${avg}%</div><div class="bar" style="margin-top:4px"><i style="width:${avg}%"></i></div>`}
-  return `<div class="card"><div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span><button class="x" onclick="rmGoal('${g.id}')">×</button></div>${gctl(g)}${ex}</div>`}).join('')||`<p class="mut">${T('เพิ่มเป้าหมายแรกของคุณ','Add your first goal.')}</p>`);
+  return `<div class="card">${ek==g.id+'||'?edForm(g.id,'',''):`<div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span><button class="ghost sm" onclick="ek='${g.id}||';render()">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmGoal('${g.id}')">×</button></div>${g.note?noteH(g.note):''}`}${gctl(g)}${ex}${subsBlock(g)}</div>`}).join('')||`<p class="mut">${T('เพิ่มเป้าหมายแรกของคุณ','Add your first goal.')}</p>`);
 }
-function addGoal(){const n=val('gn').trim();if(!n)return;const m=val('gm'),dd=val('gd');if(m=='due'&&!dd)return alert(T('เลือกวันกำหนด','Pick a due date'));S.goals.push({id:uid(),n,type:val('gt'),mode:m,due:dd});save();render()}
-const rmGoal=id=>{S.goals=S.goals.filter(g=>g.id!=id);delete S.glog[id];save();render()};
+function addGoal(){const n=val('gn').trim();if(!n)return;const m=val('gm'),dd=val('gd');if(m=='due'&&!dd)return toast(T('เลือกวันกำหนด','Pick a due date'));const gid=uid(),gt=val('gt');S.goals.push({id:gid,n,type:gt=='list'?'check':gt,mode:m,due:dd,...(gt=='list'?{subs:[],list:true}:{})});if(gt=='list')gOpen=gid;save();render()}
+const rmGoal=async id=>{const g0=GF(id)||{};if(!await askDel(T('ลบเป้าหมาย "'+g0.n+'" รวมหัวข้อย่อยและความคืบหน้าทั้งหมด','Delete goal "'+g0.n+'" with all sub-topics and progress')))return;S.goals=S.goals.filter(g=>g.id!=id);delete S.glog[id];save();render()};
 const setG=(id,v)=>{(S.glog[id]=S.glog[id]||{})[today()]=v;save();render()};
 /* Food */
 const foodTotal=d=>S.food.filter(f=>f.d==d).reduce((a,f)=>a+f.k,0);
@@ -312,7 +345,7 @@ function sleepView(){
 const sleepNow=()=>{S.sp={bed:nowHM()};save();render()};
 const wakeNow=()=>{if(!S.sp)return;S.sl=S.sl.filter(x=>x.d!=today());S.sl.push({d:today(),bed:S.sp.bed,wake:nowHM()});S.sp=null;save();render()};
 function addSleep(){const d=val('sdte')||today(),bed=val('sbed'),wake=val('swk');if(!bed||!wake)return;S.sl=S.sl.filter(x=>x.d!=d);S.sl.push({d,bed,wake});save();render()}
-const rmSleep=d=>{S.sl=S.sl.filter(x=>x.d!=d);save();render()};
+const rmSleep=async d=>{if(!await askDel(T('ลบการนอนวันที่ '+d,'Delete the sleep entry for '+d)))return;S.sl=S.sl.filter(x=>x.d!=d);save();render()};
 function weightView(){
  const a=[...S.bw].sort((x,y)=>x.d<y.d?-1:1),n=a.length,last=a[n-1],pv=a[n-2],f=v=>(v>0?'+':'')+v.toFixed(1)+' kg';
  let ch='';
@@ -325,7 +358,7 @@ function weightView(){
  a.slice(-10).reverse().map(x=>{const i=a.indexOf(x),p=a[i-1];return `<div class="card row"><span style="flex:1">${x.d}</span><b>${x.w} kg</b><span class="mut" style="width:70px;text-align:right">${p?f(x.w-p.w):''}</span><button class="x" onclick="rmBw('${x.d}')">×</button></div>`}).join('');
 }
 function addBw(){const w=+val('bw'),d=val('bd')||today();if(!w)return;S.bw=S.bw.filter(x=>x.d!=d);S.bw.push({d,w});save();render()}
-const rmBw=d=>{S.bw=S.bw.filter(x=>x.d!=d);save();render()};
+const rmBw=async d=>{if(!await askDel(T('ลบน้ำหนักวันที่ '+d,'Delete the weight entry for '+d)))return;S.bw=S.bw.filter(x=>x.d!=d);save();render()};
 function foodMeals(){
  const d=today(),t=macT(d),pct=Math.min(100,Math.round(t.k/S.kgoal*100));
  const mb=(l,v,g)=>`<div style="flex:1"><div class="mut">${l}</div><b>${Math.round(v)}${g?' / '+g:''} g</b>${g?`<div class="bar" style="margin-top:4px"><i style="width:${Math.min(100,v/g*100)}%"></i></div>`:''}</div>`;
@@ -338,7 +371,7 @@ function freqFoods(){const m={};S.food.forEach(f=>{const k=f.n.trim().toLowerCas
  return `<div class="mut" style="margin:12px 0 4px">${T('กินบ่อย แตะเพื่อเพิ่ม','Frequent meals. Tap to add')}</div><div class="chips">${a.map(o=>`<button class="chip" onclick="addAgain('${o.f.id}')">${esc(o.n)} · ${o.f.k}</button>`).join('')}</div>`}
 const addAgain=id=>{const f=S.food.find(x=>x.id==id);if(!f)return;S.food.push({...f,id:uid(),d:today()});save();render();toast(T('เพิ่ม ','Added ')+f.n)};
 function addFood(){const n=val('fn').trim(),p=+val('fp')||0,c=+val('fc')||0,f=+val('ff')||0,k=+val('fk')||Math.round(4*p+4*c+9*f);if(!n||!k)return;S.food.push({id:uid(),d:today(),n,k,p,c,f});save();render()}
-const rmFood=id=>{S.food=S.food.filter(f=>f.id!=id);save();render()};
+const rmFood=async id=>{const f0=S.food.find(f=>f.id==id)||{};if(!await askDel(T('ลบ "'+f0.n+'"','Delete "'+f0.n+'"')))return;S.food=S.food.filter(f=>f.id!=id);save();render()};
 /* Gym */
 function gym(){
  const tabs=[['workout',T('ออกกำลัง','Workout')],['plans',T('แผน','Plans')],['ex',T('ท่า','Exercises')],['prog',T('พัฒนาการ','Progress')],['streak',T('ประวัติ','History')]];
@@ -419,9 +452,9 @@ function addSet(id,wu){const a=+val('a_'+id),b=+val('b_'+id)||0;if(!a)return;con
  if(pb>0&&m>pb)toast(T('สถิติใหม่ ','New PR ')+e.n+' '+fmt(e,{a,b}));
 }
 const wuRows=(b,act)=>{const d=today();return b.map(it=>((S.wu[d]||{})[it.e]||[]).map((s,k)=>`<div class="row mut"><span style="flex:1">${T('วอร์มอัป','Warm-up')} ${k+1}${b.length>1?' · '+esc(exn(it.e).n):''}: ${fmt(exn(it.e),s)}</span>${act?`<button class="x" onclick="rmWu('${it.e}',${k})">×</button>`:''}</div>`).join('')).join('')};
-const rmWu=(id,k)=>{S.wu[today()][id].splice(k,1);save();render()};
+const rmWu=async(id,k)=>{if(!await askDel(T('ลบเซ็ตวอร์มอัปนี้','Delete this warm-up set')))return;S.wu[today()][id].splice(k,1);save();render()};
 function saveSet(id,k){const a=+val('ea_'+id),b=+val('eb_'+id)||0;if(!a)return;S.wk[today()][id][k]={a,b};edK='';save();render()}
-const rmSet=(id,i)=>{S.wk[today()][id].splice(i,1);save();render()};
+const rmSet=async(id,i)=>{if(!await askDel(T('ลบเซ็ตนี้','Delete this set')))return;S.wk[today()][id].splice(i,1);save();render()};
 let pdi=-1;
 function gPlans(){
  return `<div class="card"><div class="row"><input id="pn" placeholder="${T('ชื่อแผน','Plan name')}"><button class="btn" onclick="addPlan()">+</button></div></div>`+
@@ -442,12 +475,12 @@ const renPlan=id=>{const n=val('rn').trim();if(!n)return;PL(id).n=n;save();rende
 const mv=(id,i,j,d)=>{const a=PL(id).days[i],k=j+d;if(k<0||k>=a.length)return;[a[j],a[k]]=[a[k],a[j]];save();render()};
 const pSet=(id,i,j,k,f,v)=>{PL(id).days[i][j].s[k][f]=+v;save()};
 const addPS=(id,i,j)=>{const a=PL(id).days[i][j].s;a.push(a.length?{...a[a.length-1]}:{a:10,b:0});save();render()};
-const rmPS=(id,i,j,k)=>{PL(id).days[i][j].s.splice(k,1);save();render()};
+const rmPS=async(id,i,j,k)=>{if(!await askDel(T('ลบเซ็ตนี้ออกจากแผน','Delete this set from the plan')))return;PL(id).days[i][j].s.splice(k,1);save();render()};
 function addPlan(){const n=val('pn').trim();if(!n)return;const id=uid();S.plans.push({id,n,days:[[],[],[],[],[],[],[]]});if(!S.main)S.main=id;ppOpen=id;save();render()}
 const dupPlan=id=>{const p=PL(id),n=uid();S.plans.push({id:n,n:p.n+' 2',days:JSON.parse(JSON.stringify(p.days))});ppOpen=n;save();render()};
 const dayAdd=(id,i,x)=>{if(!x)return;PL(id).days[i].push({e:x,s:dflt(x)});save();render()};
-const dayRm=(id,i,j)=>{PL(id).days[i].splice(j,1);save();render()};
-const rmPlan=id=>{S.plans=S.plans.filter(p=>p.id!=id);if(S.main==id)S.main=(S.plans[0]||{}).id||null;save();render()};
+const dayRm=async(id,i,j)=>{const nm=exn(PL(id).days[i][j].e).n;if(!await askDel(T('เอาท่า "'+nm+'" ออกจากวันนี้ในแผน','Remove "'+nm+'" from this day of the plan')))return;PL(id).days[i].splice(j,1);save();render()};
+const rmPlan=async id=>{const p0=PL(id)||{};if(!await askDel(T('ลบแผน "'+p0.n+'"','Delete plan "'+p0.n+'"')))return;S.plans=S.plans.filter(p=>p.id!=id);if(S.main==id)S.main=(S.plans[0]||{}).id||null;save();render()};
 const GRP={chest:'chest',shoulder:'shoulder',bicep:'arms',tricep:'arms',forearm:'arms',abs:'core',quads:'legs',hamstring:'legs',glutes:'legs',calf:'legs',trap:'back',back:'back',cardio:'cardio'};
 const GN={chest:['อก','Chest'],back:['หลัง','Back'],shoulder:['ไหล่','Shoulders'],arms:['แขน','Arms'],core:['หน้าท้อง','Core'],legs:['ขา','Legs'],cardio:['คาร์ดิโอ','Cardio'],other:['อื่นๆ','Other']};
 const grpOf=e=>GRP[mus(e)[0]]||'other';
@@ -471,8 +504,8 @@ const togM=m=>{keepEx();exM=exM.includes(m)?exM.filter(x=>x!=m):[...exM,m];rende
 const setW=w=>{keepEx();exW=w;render()};
 const editEx=id=>{const e=exn(id);exEd=id;exN=e.n;exC=e.c;exT=e.t;exW=e.w||'mid';exM=mus(e).slice();render();try{scrollTo(0,0)}catch(x){}};
 const cancelEx=()=>{exN='';exM=[];exEd='';exW='mid';render()};
-function addEx(){const n=val('en').trim();if(!n)return;if(!exM.length)return alert(T('เลือกกล้ามเนื้ออย่างน้อย 1 ส่วน','Pick at least one muscle'));const o={n,c:val('ec'),t:val('et'),w:exW,ms:exM.slice()};if(exEd)Object.assign(exn(exEd),o);else S.ex.push({id:uid(),...o});exN='';exM=[];exEd='';exW='mid';save();render()}
-const rmEx=id=>{S.ex=S.ex.filter(e=>e.id!=id);S.plans.forEach(p=>p.days=p.days.map(a=>a.filter(i=>i.e!=id)));save();render()};
+function addEx(){const n=val('en').trim();if(!n)return;if(!exM.length)return toast(T('เลือกกล้ามเนื้ออย่างน้อย 1 ส่วน','Pick at least one muscle'));const o={n,c:val('ec'),t:val('et'),w:exW,ms:exM.slice()};if(exEd)Object.assign(exn(exEd),o);else S.ex.push({id:uid(),...o});exN='';exM=[];exEd='';exW='mid';save();render()}
+const rmEx=async id=>{const e0=exn(id);if(!await askDel(T('ลบท่า "'+e0.n+'" และเอาออกจากทุกแผน','Delete exercise "'+e0.n+'" and remove it from all plans')))return;S.ex=S.ex.filter(e=>e.id!=id);S.plans.forEach(p=>p.days=p.days.map(a=>a.filter(i=>i.e!=id)));save();render()};
 const RNG_OPT=[['1m',30,'1 เดือน','1 mo'],['3m',91,'3 เดือน','3 mo'],['6m',182,'6 เดือน','6 mo'],['1y',365,'1 ปี','1 yr'],['all',0,'ทั้งหมด','All']];
 let cr='3m';
 const rangeBar=()=>`<div class="seg s5">${RNG_OPT.map(r=>`<button class="${cr==r[0]?'on':''}" onclick="cr='${r[0]}';render()">${S.lang=='th'?r[2]:r[3]}</button>`).join('')}</div>`;
@@ -510,13 +543,13 @@ function oldData(del,c0){
  const c=c0||cutoff(),A={wk:{},wu:{},ses:{},skip:{},food:[],sl:[],bw:[],tasks:[],glog:{},dn:{}};let n=0;
  ['wk','wu','ses','skip'].forEach(k=>Object.keys(S[k]||{}).forEach(d=>{if(d<c){A[k][d]=S[k][d];n++;if(del)delete S[k][d]}}));
  [['food',x=>x.d<c],['sl',x=>x.d<c],['bw',x=>x.d<c],['tasks',t=>!t.r&&t.d<c&&t.done]].forEach(([k,f])=>{A[k]=S[k].filter(f);n+=A[k].length;if(del)S[k]=S[k].filter(x=>!f(x))});
- S.goals.filter(g=>g.mode!='due').forEach(g=>Object.keys(S.glog[g.id]||{}).forEach(d=>{if(d<c){(A.glog[g.id]=A.glog[g.id]||{})[d]=S.glog[g.id][d];n++;if(del)delete S.glog[g.id][d]}}));
+ S.goals.filter(g=>!isCum(g)).forEach(g=>Object.keys(S.glog[g.id]||{}).forEach(d=>{if(d<c){(A.glog[g.id]=A.glog[g.id]||{})[d]=S.glog[g.id][d];n++;if(del)delete S.glog[g.id][d]}}));
  S.tasks.filter(t=>t.r&&t.dn).forEach(t=>Object.keys(t.dn).forEach(d=>{if(d<c){(A.dn[t.id]=A.dn[t.id]||{})[d]=t.dn[d];n++;if(del)delete t.dn[d]}}));
  return {A,n,c}}
 let ARC=null;
 async function archiveMake(){const o=oldData(false);if(!o.n)return;const ok=await saveFile(JSON.stringify({type:'versa-archive',version:1,cutoff:o.c,created:today(),data:o.A}),'versa-archive-'+o.c+'.json');
- if(ok){ARC={c:o.c};render()}else alert(T('ยังไม่ได้บันทึกไฟล์','The file was not saved'))}
-function archiveDelete(){if(!ARC)return;if(!confirm(T('ลบข้อมูลเก่ากว่า 1 ปีออกจากแอป ยืนยันว่าเก็บไฟล์ไว้แล้ว','Delete data older than 1 year from the app? Confirm the file is stored.')))return;oldData(true,ARC.c);ARC=null;save();render()}
+ if(ok){ARC={c:o.c};render()}else toast(T('ยังไม่ได้บันทึกไฟล์','The file was not saved'))}
+async function archiveDelete(){if(!ARC)return;if(!await askP(T('ลบข้อมูลเก่ากว่า 1 ปีออกจากแอป ยืนยันว่าเก็บไฟล์ไว้แล้ว','Delete data older than 1 year from the app? Confirm the file is stored.')))return;oldData(true,ARC.c);ARC=null;save();render()}
 function storageCard(){
  const o=oldData(false),pc=pctUse();
  return `<div class="card"><b>${T('พื้นที่เก็บข้อมูล','Storage')}</b><div class="bar" style="margin:8px 0"><i style="width:${pc}%"></i></div><div class="mut">${pc}% · ${Math.round(USED/1024)} KB / ${Math.round(QUOTA/1024)} KB</div>
@@ -524,15 +557,15 @@ function storageCard(){
  <button class="btn" style="width:100%;margin-top:6px" ${o.n?'':'disabled'} onclick="archiveMake()">${T('สร้างไฟล์สำรองข้อมูลเก่า','Create archive of old data')}</button>
  ${ARC?`<div class="mut" style="margin-top:8px">${T('เก็บไฟล์เรียบร้อยแล้วค่อยลบ ข้อมูลที่ลบจะอยู่ในไฟล์เท่านั้น และสถิติ PR ก่อนหน้านั้นจะไม่ถูกนับอีก','Delete only after the file is stored. Deleted data will exist only in the file, and older PRs will no longer be counted.')}</div><button class="ghost" style="width:100%;margin-top:6px" onclick="archiveDelete()">${T('ลบข้อมูลเก่าออกจากแอป','Delete old data from the app')}</button>`:''}</div>`;
 }
-function importFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
+function importFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{const o=JSON.parse(r.result);
  if(o.type=='versa-archive'){const D=o.data||{};
   ['wk','wu','ses','skip'].forEach(k=>{S[k]=Object.assign({},D[k]||{},S[k]||{})});
   [['food','id'],['sl','d'],['bw','d']].forEach(([k,key])=>{const have=new Set(S[k].map(x=>x[key]));(D[k]||[]).forEach(x=>{if(!have.has(x[key]))S[k].push(x)})});
   const ids=new Set(S.tasks.map(t=>t.id));(D.tasks||[]).forEach(t=>{if(!ids.has(t.id))S.tasks.push(t)});
   Object.keys(D.glog||{}).forEach(id=>{S.glog[id]=Object.assign({},D.glog[id],S.glog[id]||{})});
   Object.keys(D.dn||{}).forEach(id=>{const t=S.tasks.find(x=>x.id==id);if(t)t.dn=Object.assign({},D.dn[id],t.dn||{})});
- }else{if(!confirm(T('นำเข้าจะทับข้อมูลปัจจุบัน','Importing will overwrite current data')))return;S=Object.assign(S,o)}
- S.user=S.user||{n:'me'};save();render();alert(T('นำเข้าแล้ว','Imported'))}catch(e){alert(T('ไฟล์ไม่ถูกต้อง','Invalid file'))}};r.readAsText(f);inp.value=''}
+ }else{if(!await askP(T('นำเข้าจะทับข้อมูลปัจจุบัน','Importing will overwrite current data')))return;S=Object.assign(S,o)}
+ S.user=S.user||{n:'me'};save();render();toast(T('นำเข้าแล้ว','Imported'))}catch(e){toast(T('ไฟล์ไม่ถูกต้อง','Invalid file'))}};r.readAsText(f);inp.value=''}
 function series(id){
  const e=exn(id),pts=[];
  Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;
@@ -583,16 +616,17 @@ function dayHist(d){
  `<div class="card"><div class="mut" style="margin-bottom:6px">${T('เพิ่มเซ็ตย้อนหลัง','Add a set to this day')}</div><select id="hx"><option value="">${T('เลือกท่า','Pick exercise')}</option>${exOpts(S.ex)}</select><div class="row" style="margin-top:8px"><input id="ha" type="number" inputmode="decimal" placeholder="reps / min"><input id="hb" type="number" inputmode="decimal" placeholder="kg"><button class="btn" onclick="hAdd('${d}')">+</button></div></div>`;
 }
 const hSet=(d,id,k,f,v)=>{S.wk[d][id][k][f]=+v;save()};
-function hRm(d,id,k){S.wk[d][id].splice(k,1);if(!S.wk[d][id].length)delete S.wk[d][id];if(!Object.keys(S.wk[d]).length)delete S.wk[d];save();render()}
-const hRmW=(d,id,k)=>{S.wu[d][id].splice(k,1);save();render()};
+async function hRm(d,id,k){if(!await askDel(T('ลบเซ็ตนี้','Delete this set')))return;S.wk[d][id].splice(k,1);if(!S.wk[d][id].length)delete S.wk[d][id];if(!Object.keys(S.wk[d]).length)delete S.wk[d];save();render()}
+const hRmW=async(d,id,k)=>{if(!await askDel(T('ลบเซ็ตวอร์มอัปนี้','Delete this warm-up set')))return;S.wu[d][id].splice(k,1);save();render()};
 function hAdd(d){const id=val('hx'),a=+val('ha'),b=+val('hb')||0;if(!id||!a)return;((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});save();render()}
 function gStreak(){
  const d=today(),sk=S.skip[d];
  return `<div class="card" style="text-align:center">${streakHTML(76,96)}<div class="mut" style="margin-top:6px">${T('วันต่อเนื่อง','day streak')}</div></div>${trainSummary()}
- <div class="card">${sk?`<div class="row"><span style="flex:1">${T('วันนี้พัก','Rest today')}: ${esc(sk)}</span><button class="x" onclick="delete S.skip['${d}'];save();render()">×</button></div>`:`<div class="row"><input id="sr" placeholder="${T('วันนี้ไม่ว่าง เพราะ…','Skipping today because…')}"><button class="btn" onclick="skipDay()">OK</button></div>`}</div>
+ <div class="card">${sk?`<div class="row"><span style="flex:1">${T('วันนี้พัก','Rest today')}: ${esc(sk)}</span><button class="x" onclick="rmSkip('${d}')">×</button></div>`:`<div class="row"><input id="sr" placeholder="${T('วันนี้ไม่ว่าง เพราะ…','Skipping today because…')}"><button class="btn" onclick="skipDay()">OK</button></div>`}</div>
  <div class="hgrid">${[...Array(28).keys()].reverse().map(n=>{const x=back(n);return `<button class="hb ${trained(x)?'on':S.skip[x]?'sk':''} ${(hd||today())==x?'sel':''}" onclick="hd='${x}';render()">${+x.slice(8)}</button>`}).join('')}</div>${dayHist(hd||today())}
  ${Object.keys(S.skip).sort().reverse().slice(0,5).map(x=>`<div class="mut">${x}: ${esc(S.skip[x])}</div>`).join('')}`;
 }
+async function rmSkip(d){if(!await askDel(T('ลบเหตุผลที่พักวันนี้','Remove the rest-day reason')))return;delete S.skip[d];save();render()}
 function skipDay(){const r=val('sr').trim();if(!r)return;S.skip[today()]=r;save();render()}
 /* Rest timer */
 let AC=null;
@@ -622,7 +656,7 @@ function settings(){
  <div class="card"><b>${T('ชื่อ','Name')}</b><div class="row" style="margin-top:8px"><input id="un" value="${esc(S.user.n)}"><button class="btn" onclick="S.user.n=val('un').trim()||S.user.n;save();render()">OK</button></div></div>
  <div class="card row"><span style="flex:1">${esc(EM)}<br><span class="mut">${SYNC=='ok'?T('ซิงค์แล้ว','Synced'):SYNC=='err'?T('ซิงค์ไม่สำเร็จ','Sync error'):''}</span></span><button class="ghost" onclick="syncNow()">${T('ซิงค์','Sync')}</button><button class="ghost" onclick="logout()">${T('ออกจากระบบ','Log out')}</button></div>`;
 }
-function impD(){try{const o=JSON.parse(val('bk'));S=Object.assign(S,o);S.logged=true;save();render()}catch(e){alert(T('ข้อมูลไม่ถูกต้อง','Invalid data'))}}
+function impD(){try{const o=JSON.parse(val('bk'));S=Object.assign(S,o);S.logged=true;save();render()}catch(e){toast(T('ข้อมูลไม่ถูกต้อง','Invalid data'))}}
 setTimeout(()=>{const b=banner();QUOTA=probeQuota();if(banner()!==b)render()},3000);
 render();boot();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
