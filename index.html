@@ -627,16 +627,16 @@ let cr='3m';
 const rangeBar=()=>`<div class="seg s5">${RNG_OPT.map(r=>`<button class="${cr==r[0]?'on':''}" onclick="cr='${r[0]}';render()">${S.lang=='th'?r[2]:r[3]}</button>`).join('')}</div>`;
 const inRange=pts=>{const o=RNG_OPT.find(r=>r[0]==cr);return o[1]?pts.filter(x=>x[0]>=back(o[1])):pts};
 const weekKey=d=>{const t=new Date(d+'T00:00');t.setDate(t.getDate()-(t.getDay()+6)%7);return iso(t)};
-function agg(pts,mode){if(pts.length<=60)return {p:pts,w:false};const m={};pts.forEach(([d,v])=>{(m[weekKey(d)]=m[weekKey(d)]||[]).push(v)});
- return {w:true,p:Object.keys(m).sort().map(k=>[k,mode=='max'?Math.max(...m[k]):+(m[k].reduce((a,b)=>a+b,0)/m[k].length).toFixed(1)])}}
+function agg(pts,mode){if(pts.length<=60)return {p:pts,w:false};const m={};pts.forEach(([d,v,l])=>{(m[weekKey(d)]=m[weekKey(d)]||[]).push([v,l])});
+ return {w:true,p:Object.keys(m).sort().map(k=>{const a=m[k];if(mode=='max'){const b=a.reduce((x,y)=>y[0]>x[0]?y:x);return b[1]===undefined?[k,b[0]]:[k,b[0],b[1]]}return [k,+(a.reduce((x,y)=>x+y[0],0)/a.length).toFixed(1)]})}}
 const aggNote=(w,mode)=>w?`<div class="mut" style="margin-top:6px">${T('รวมเป็นรายสัปดาห์ ','Weekly points. ')}${mode=='max'?T('ใช้ค่าสูงสุดของสัปดาห์','best of each week'):T('ใช้ค่าเฉลี่ยของสัปดาห์','weekly average')}</div>`:'';
 function chartSVG(pts,o){
  const n=pts.length;if(n<2)return `<p class="mut">${T('ในช่วงนี้มีข้อมูลไม่ถึง 2 จุด','Fewer than 2 data points in this range')}</p>`;
  const W=320,H=170,P=28,g=o.goal||0,ys=pts.map(x=>x[1]),mxv=Math.max(...ys),vs=ys.concat(g?[g]:[]),mx=Math.max(...vs),mi=Math.min(...vs),r=(mx-mi)||1;
  const X=i=>P+i*(W-2*P)/(n-1),Y=v=>H-30-(v-mi)/r*(H-66),mI=ys.indexOf(mxv);
- const lab=[mI];if(Math.abs(X(n-1)-X(mI))>=40)lab.push(n-1);if(Math.abs(X(0)-X(mI))>=40&&(!lab.includes(n-1)||Math.abs(X(0)-X(n-1))>=40))lab.push(0);
+ const lab=[mI];if(Math.abs(X(n-1)-X(mI))>=46)lab.push(n-1);if(Math.abs(X(0)-X(mI))>=46&&(!lab.includes(n-1)||Math.abs(X(0)-X(n-1))>=46))lab.push(0);
  const dr=n>40?2:n>20?3:3.5;
- return `<svg viewBox="0 0 ${W} ${H}" width="100%">${g?`<line x1="${P}" x2="${W-P}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/><text x="${W-P}" y="${Y(g)-5}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${g}</text>`:''}<polyline fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((x,i)=>X(i)+','+Y(x[1])).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x[1])}" r="${dr}" fill="var(--ac)"/>`).join('')}<circle cx="${X(mI)}" cy="${Y(mxv)}" r="6.5" fill="none" stroke="var(--ac)" stroke-width="1.5"/>${lab.map(i=>`<text x="${X(i)}" y="${Y(ys[i])-11}" font-size="11" font-weight="${i==mI?700:400}" text-anchor="middle" fill="var(--fg)">${ys[i]}</text>`).join('')}<text x="${P}" y="${H-6}" font-size="10" fill="var(--mut)">${pts[0][0]}</text><text x="${W-P}" y="${H-6}" font-size="10" text-anchor="end" fill="var(--mut)">${pts[n-1][0]}</text></svg>`;
+ return `<svg viewBox="0 0 ${W} ${H}" width="100%">${g?`<line x1="${P}" x2="${W-P}" y1="${Y(g)}" y2="${Y(g)}" stroke="var(--mut)" stroke-dasharray="4 4"/><text x="${W-P}" y="${Y(g)-5}" font-size="10" text-anchor="end" fill="var(--mut)">${T('เป้า','Goal')} ${g}</text>`:''}<polyline fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((x,i)=>X(i)+','+Y(x[1])).join(' ')}"/>${pts.map((x,i)=>`<circle cx="${X(i)}" cy="${Y(x[1])}" r="${dr}" fill="var(--ac)"/>`).join('')}<circle cx="${X(mI)}" cy="${Y(mxv)}" r="6.5" fill="none" stroke="var(--ac)" stroke-width="1.5"/>${lab.map(i=>{const t=pts[i][2]&&o.top?o.top(pts[i][2]):'',y=Y(ys[i])-11;return t?`<text x="${X(i)}" y="${y-12}" font-size="11" font-weight="700" text-anchor="middle" fill="var(--fg)">${t}</text><text x="${X(i)}" y="${y}" font-size="10" text-anchor="middle" fill="var(--mut)">(${ys[i]})</text>`:`<text x="${X(i)}" y="${y}" font-size="11" font-weight="${i==mI?700:400}" text-anchor="middle" fill="var(--fg)">${pts[i][2]!==undefined?pts[i][2]:ys[i]}</text>`}).join('')}<text x="${P}" y="${H-6}" font-size="10" fill="var(--mut)">${pts[0][0]}</text><text x="${W-P}" y="${H-6}" font-size="10" text-anchor="end" fill="var(--mut)">${pts[n-1][0]}</text></svg>`;
 }
 const pctUse=()=>Math.min(100,Math.round((USED+4000)/QUOTA*100));
 function banner(){
@@ -685,20 +685,22 @@ function importFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=ne
  }else{if(!await askP(T('นำเข้าจะทับข้อมูลปัจจุบัน','Importing will overwrite current data')))return;S=Object.assign(S,o)}
  S.user=S.user||{n:'me'};save();render();toast(T('นำเข้าแล้ว','Imported'))}catch(e){toast(T('ไฟล์ไม่ถูกต้อง','Invalid file'))}};r.readAsText(f);inp.value=''}
 let cMet='';
+const fmtTop=(e,t)=>e.c=='time'?t.a+' min':t.b>0?t.b+'×'+t.a:t.a+' rep';
 const isWtd=id=>Object.values(S.wk).some(w=>(w[id]||[]).some(x=>x.b>0));
-const metOpts=id=>exn(id).c=='time'?[]:isWtd(id)?['1rm','weight','vol','reps']:['reps','vol'];
-const metName=m=>({'1rm':T('1RM โดยประมาณ','Est. 1RM'),weight:T('น้ำหนักสูงสุด','Top weight'),vol:T('ปริมาณรวม','Total volume'),reps:T('rep สูงสุด','Best reps'),time:T('เวลารวม','Total time')})[m];
-const metUnit=(m,w)=>({'1rm':'kg',weight:'kg',vol:w?'kg×rep':'rep',reps:'rep',time:'min'})[m];
+const metOpts=id=>exn(id).c=='time'?[]:isWtd(id)?['1rm','top','weight','vol','reps']:['reps','vol'];
+const metName=m=>({'1rm':T('1RM โดยประมาณ','Est. 1RM'),top:T('เซ็ตแรก','Top set'),weight:T('น้ำหนักสูงสุด','Top weight'),vol:T('ปริมาณรวม','Total volume'),reps:T('rep สูงสุด','Best reps'),time:T('เวลารวม','Total time')})[m];
+const metUnit=(m,w)=>({'1rm':'kg',top:'(kg × rep)',weight:'kg',vol:w?'kg×rep':'rep',reps:'rep',time:'min'})[m];
 function curMet(id){const e=exn(id),o=metOpts(id);if(e.c=='time')return 'time';if(o.includes(cMet))return cMet;return e.w=='light'&&o.includes('vol')?'vol':o[0]}
 function series(id,m){
  const pts=[];m=m||curMet(id);
  Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;let v;
   if(m=='time')v=s.reduce((a,x)=>a+x.a,0);
+  else if(m=='top'){const f=s[0];v=f.b>0?f.b*(1+f.a/30):f.a}
   else if(m=='weight')v=Math.max(...s.map(x=>x.b||0));
   else if(m=='1rm')v=Math.max(...s.map(x=>x.b>0?x.b*(1+x.a/30):0));
   else if(m=='vol')v=s.reduce((a,x)=>a+(x.b>0?x.a*x.b:x.a),0);
   else v=Math.max(...s.map(x=>x.a));
-  v=+v.toFixed(1);if(v>0)pts.push([d,v])});
+  v=+v.toFixed(1);if(v>0)pts.push([d,v,s[0]])});
  return pts}
 const pickM=m=>{pm=m;pe='';render()};
 const MC={shoulder:'#d9a441',chest:'#c45f86',bicep:'#4f8a5b',tricep:'#4f8a5b',forearm:'#b08a5a',abs:'#3f8fbf',quads:'#7e5aa5',hamstring:'#7e5aa5',glutes:'#3f8fbf',calf:'#b03a3a',trap:'#d9a441',back:'#b08a5a'};
@@ -722,7 +724,7 @@ function gProg(){
  const m=curMet(pe),p=series(pe,m),e=exn(pe),wt=isWtd(pe);
  if(p.length<2)return h+prCard(pe)+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
  const q=agg(inRange(p),'max'),mo=metOpts(pe);
- return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut" style="margin-bottom:6px">${esc(e.n)} · ${metName(m)} ${metUnit(m,wt)}</div>${mo.length>1?`<div class="chips">${mo.map(o=>`<button class="chip ${o==m?'on':''}" onclick="cMet='${o}';render()">${metName(o)}</button>`).join('')}</div>`:''}${rangeBar()}${chartSVG(q.p,{})}${aggNote(q.w,'max')}</div>`;
+ return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut" style="margin-bottom:6px">${esc(e.n)} · ${metName(m)} ${metUnit(m,wt)}</div>${mo.length>1?`<div class="chips">${mo.map(o=>`<button class="chip ${o==m?'on':''}" onclick="cMet='${o}';render()">${metName(o)}</button>`).join('')}</div>`:''}${rangeBar()}${chartSVG(q.p,{top:t=>fmtTop(e,t)})}${aggNote(q.w,'max')}<div class="mut" style="margin-top:6px;font-size:13px">${T('ป้ายบนจุด: เซ็ตแรกของวัน น้ำหนัก×rep ตามด้วยค่าในวงเล็บของมุมมองที่เลือก','Point labels: first set of the day as kg×reps, then the selected view value in brackets')}</div><div class="mut" style="margin-top:10px">${T('เซ็ตแรกล่าสุด','Latest first sets')}</div>${p.slice(-5).reverse().map(x=>`<div class="row"><span style="flex:1">${x[0]}</span><b>${fmtTop(e,x[2])}</b><span class="mut" style="width:70px;text-align:right">(${x[1]})</span></div>`).join('')}</div>`;
 }
 const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
 const planRest=d=>{const pl=S.plans.find(p=>p.id==S.main)||S.plans[0];if(!pl||d>today())return false;const di=(new Date(d+'T00:00').getDay()+6)%7;return !pl.days[di].length};
