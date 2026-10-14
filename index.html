@@ -503,19 +503,20 @@ const fmt=(e,s)=>e.c=='time'?s.a+' min':s.a+'×'+s.b+'kg';
 const mm=ms=>{const t=Math.max(0,Math.floor(ms/1000));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 function prev(id,k,bef){bef=bef||today();const ds=Object.keys(S.wk).filter(d=>d<bef&&S.wk[d][id]&&S.wk[d][id].length).sort();if(!ds.length)return null;const a=S.wk[ds[ds.length-1]][id];return a[Math.min(k,a.length-1)]}
 const lastSets=id=>{const ds=Object.keys(S.wk).filter(d=>S.wk[d][id]&&S.wk[d][id].length).sort();return ds.length?{d:ds[ds.length-1],a:S.wk[ds[ds.length-1]][id]}:null};
-const RNG={heavy:[5,8],mid:[8,12],light:[12,15]};
-const rng=e=>RNG[e.w||'mid'];
+const TGT={heavy:8,mid:10,light:12};
+const tgt=e=>TGT[e.w||'mid'];
+const incW=(e,b)=>{const w=e.w||'mid';return w=='heavy'?(b>60?5:2.5):w=='light'?1.25:(b<20?1.25:2.5)};
+const incTxt=e=>{const w=e.w||'mid';return w=='heavy'?T('2.5 kg หรือ 5 kg ถ้าเกิน 60 kg','2.5 kg, or 5 kg above 60 kg'):w=='light'?'1.25 kg':T('2.5 kg หรือ 1.25 kg ถ้าต่ำกว่า 20 kg','2.5 kg, or 1.25 kg below 20 kg')};
 function sug(e,p){
  if(!p)return null;
  if(e.c=='time')return {a:p.a+(p.a>=30?2:1),b:0};
  if(!p.b)return {a:p.a+1,b:0};
- const [lo,hi]=rng(e),w=e.w||'mid',inc=w=='heavy'?(p.b>=60?5:2.5):w=='light'?(p.b<10?.5:1):(p.b<20?1:2.5);
- if(p.a>=hi)return {a:lo,b:+(p.b+inc).toFixed(2)};
- if(p.a<lo)return {a:lo,b:p.b};
+ const t=tgt(e);
+ if(p.a>=t)return {a:Math.max(1,t-2),b:+(p.b+incW(e,p.b)).toFixed(2)};
  return {a:p.a+1,b:p.b};
 }
 function sugCard(id){const e=exn(id),l=lastSets(id);if(!l)return '';
- return `<div class="card"><b>${T('แนะนำครั้งหน้า','Next session suggestion')}</b><div class="mut">${T('อิงจากครั้งล่าสุด','Based on last session')} ${l.d}</div>${l.a.map((x,k)=>`<div class="row"><span style="flex:1">${T('เซ็ต','Set')} ${k+1}: ${fmt(e,x)}</span><span>→ <b>${fmt(e,sug(e,x,null))}</b></span></div>`).join('')}<div class="mut" style="margin-top:6px">${e.c=='time'?T('เพิ่มเวลาทีละน้อย','Add a little time each session'):T('ระดับ'+WL[e.w||'mid'][0]+' ช่วง rep '+rng(e).join('-')+' ถึงเพดานแล้วเพิ่มน้ำหนัก','Class '+WL[e.w||'mid'][1]+', rep range '+rng(e).join('-')+', hit the top then add weight')}</div></div>`}
+ return `<div class="card"><b>${T('แนะนำครั้งหน้า','Next session suggestion')}</b><div class="mut">${T('อิงจากครั้งล่าสุด','Based on last session')} ${l.d}</div>${l.a.map((x,k)=>`<div class="row"><span style="flex:1">${T('เซ็ต','Set')} ${k+1}: ${fmt(e,x)}</span><span>→ <b>${fmt(e,sug(e,x,null))}</b></span></div>`).join('')}<div class="mut" style="margin-top:6px">${e.c=='time'?T('เพิ่มเวลาทีละน้อย','Add a little time each session'):T('ระดับ'+WL[e.w||'mid'][0]+' เป้า '+tgt(e)+' rep ต่อเซ็ต เพิ่มทีละ 1 rep เซ็ตไหนถึงเป้าให้เพิ่มน้ำหนักเซ็ตนั้น ทีละ '+incTxt(e)+' แล้วเริ่มใหม่ที่ '+Math.max(1,tgt(e)-2)+' rep','Class '+WL[e.w||'mid'][1]+', target '+tgt(e)+' reps per set. Add 1 rep at a time. A set that hits the target gets heavier by '+incTxt(e)+' and restarts at '+Math.max(1,tgt(e)-2)+' reps.')}</div></div>`}
 const curItems=()=>{const pl=S.plans.find(p=>p.id==selPlan)||S.plans.find(p=>p.id==S.main)||S.plans[0];return pl?pl.days[wdi()]:[]};
 const startW=()=>{S.ses[today()]={st:Date.now(),en:0};delete S.skip[today()];save();render()};
 const doneW=()=>{S.ses[today()].en=Date.now();save();rest(0);render()};
@@ -607,7 +608,7 @@ function gEx(){
  <div class="row"><select id="ec"><option value="reps" ${exC=='reps'?'selected':''}>${T('นับ rep + kg','Reps + kg')}</option><option value="time" ${exC=='time'?'selected':''}>${T('นับเวลา','Time')}</option></select><select id="et">${Object.keys(TYP).map(k=>`<option value="${k}" ${exT==k?'selected':''}>${TYP[k][L]}</option>`).join('')}</select></div>
  <div class="mut" style="margin:8px 0 2px">${T('ระดับน้ำหนัก','Weight class')}</div>
  <div class="chips">${Object.keys(WL).map(k=>`<button class="chip ${exW==k?'on':''}" onclick="setW('${k}')">${WL[k][L]}</button>`).join('')}</div>
- <div class="mut">${T('หนัก เช่น Bench, Squat · กลาง เช่น Tricep pushdown · เบา เช่น Lateral raise, Bicep curl','Heavy: Bench, Squat · Medium: Tricep pushdown · Light: Lateral raise, Bicep curl')}</div>
+ <div class="mut">${T('หนัก เป้า 8 rep เช่น Squat, Bench Press · กลาง เป้า 10 rep เช่น Tricep pushdown, Cable row · เบา เป้า 12 rep เช่น Lateral raise, Face pull','Heavy, 8 reps: Squat, Bench Press · Medium, 10 reps: Tricep pushdown, Cable row · Light, 12 reps: Lateral raise, Face pull')}</div>
  <div class="mut" style="margin:10px 0 2px">${T('กล้ามเนื้อที่โดน','Muscles worked')}</div>
  <div class="chips">${MUS.map(m=>`<button class="chip ${exM.includes(m)?'on':''}" onclick="togM('${m}')">${mn(m)}</button>`).join('')}</div>
  <textarea id="exn" placeholder="${T('โน้ตของท่า เช่น ตั้งเบาะช่อง 4','Exercise note, e.g. seat position 4')}" style="min-height:60px;margin-top:8px">${esc(exNote)}</textarea>
@@ -683,12 +684,22 @@ function importFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=ne
   Object.keys(D.dn||{}).forEach(id=>{const t=S.tasks.find(x=>x.id==id);if(t)t.dn=Object.assign({},D.dn[id],t.dn||{})});
  }else{if(!await askP(T('นำเข้าจะทับข้อมูลปัจจุบัน','Importing will overwrite current data')))return;S=Object.assign(S,o)}
  S.user=S.user||{n:'me'};save();render();toast(T('นำเข้าแล้ว','Imported'))}catch(e){toast(T('ไฟล์ไม่ถูกต้อง','Invalid file'))}};r.readAsText(f);inp.value=''}
-function series(id){
- const e=exn(id),pts=[];
- Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;
-  pts.push([d,e.c=='time'?s.reduce((a,x)=>a+x.a,0):Math.max(...s.map(x=>x.b>0?x.b:x.a))])});
- return pts;
-}
+let cMet='';
+const isWtd=id=>Object.values(S.wk).some(w=>(w[id]||[]).some(x=>x.b>0));
+const metOpts=id=>exn(id).c=='time'?[]:isWtd(id)?['1rm','weight','vol','reps']:['reps','vol'];
+const metName=m=>({'1rm':T('1RM โดยประมาณ','Est. 1RM'),weight:T('น้ำหนักสูงสุด','Top weight'),vol:T('ปริมาณรวม','Total volume'),reps:T('rep สูงสุด','Best reps'),time:T('เวลารวม','Total time')})[m];
+const metUnit=(m,w)=>({'1rm':'kg',weight:'kg',vol:w?'kg×rep':'rep',reps:'rep',time:'min'})[m];
+function curMet(id){const e=exn(id),o=metOpts(id);if(e.c=='time')return 'time';if(o.includes(cMet))return cMet;return e.w=='light'&&o.includes('vol')?'vol':o[0]}
+function series(id,m){
+ const pts=[];m=m||curMet(id);
+ Object.keys(S.wk).sort().forEach(d=>{const s=S.wk[d][id];if(!s||!s.length)return;let v;
+  if(m=='time')v=s.reduce((a,x)=>a+x.a,0);
+  else if(m=='weight')v=Math.max(...s.map(x=>x.b||0));
+  else if(m=='1rm')v=Math.max(...s.map(x=>x.b>0?x.b*(1+x.a/30):0));
+  else if(m=='vol')v=s.reduce((a,x)=>a+(x.b>0?x.a*x.b:x.a),0);
+  else v=Math.max(...s.map(x=>x.a));
+  v=+v.toFixed(1);if(v>0)pts.push([d,v])});
+ return pts}
 const pickM=m=>{pm=m;pe='';render()};
 const MC={shoulder:'#d9a441',chest:'#c45f86',bicep:'#4f8a5b',tricep:'#4f8a5b',forearm:'#b08a5a',abs:'#3f8fbf',quads:'#7e5aa5',hamstring:'#7e5aa5',glutes:'#3f8fbf',calf:'#b03a3a',trap:'#d9a441',back:'#b08a5a'};
 const SH='M82 54Q66 48 52 60Q44 70 46 84Q58 86 66 80Q78 74 82 54Z',AR='M46 88Q54 90 62 86Q66 100 62 118Q54 124 46 118Q42 104 46 88Z',FA='M44 122Q54 126 62 122Q64 140 58 160Q50 168 42 160Q40 140 44 122Z';
@@ -708,10 +719,10 @@ function gProg(){
  if(!pm)return h+`<p class="mut">${T('แตะกล้ามเนื้อเพื่อดูท่าและกราฟ','Tap a muscle to see its exercises.')}</p>`;
  h+=`<div class="chips">${exs.map(e=>`<button class="chip ${pe==e.id?'on':''}" onclick="pe='${e.id}';render()">${esc(e.n)}</button>`).join('')||`<span class="mut">${T('ยังไม่มีท่า','No exercises')}</span>`}</div>`;
  if(!pe)return h;
- const p=series(pe),e=exn(pe),u=e.c=='time'?'min/day':'kg (max)';
+ const m=curMet(pe),p=series(pe,m),e=exn(pe),wt=isWtd(pe);
  if(p.length<2)return h+prCard(pe)+sugCard(pe)+`<p class="mut">${T('ต้องมีข้อมูลอย่างน้อย 2 วันจึงจะเห็นกราฟ','Log at least 2 days to see a chart.')} (${p.length})</p>`;
- const q=agg(inRange(p),'max');
- return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut" style="margin-bottom:6px">${esc(e.n)} — ${u}</div>${rangeBar()}${chartSVG(q.p,{})}${aggNote(q.w,'max')}</div>`;
+ const q=agg(inRange(p),'max'),mo=metOpts(pe);
+ return h+prCard(pe)+sugCard(pe)+`<div class="card"><div class="mut" style="margin-bottom:6px">${esc(e.n)} · ${metName(m)} ${metUnit(m,wt)}</div>${mo.length>1?`<div class="chips">${mo.map(o=>`<button class="chip ${o==m?'on':''}" onclick="cMet='${o}';render()">${metName(o)}</button>`).join('')}</div>`:''}${rangeBar()}${chartSVG(q.p,{})}${aggNote(q.w,'max')}</div>`;
 }
 const trained=d=>S.wk[d]&&Object.values(S.wk[d]).some(a=>a.length);
 const planRest=d=>{const pl=S.plans.find(p=>p.id==S.main)||S.plans[0];if(!pl||d>today())return false;const di=(new Date(d+'T00:00').getDay()+6)%7;return !pl.days[di].length};
