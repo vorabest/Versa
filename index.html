@@ -81,7 +81,7 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 <script>
 const K='helper_v1';let S={};
 try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
-S=Object.assign({user:null,logged:false,ses:{},wu:{},xn:{},rq:{},dy:{bk:[],en:[]},dl:null,snd:true,sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
+S=Object.assign({user:null,logged:false,ses:{},wu:{},xn:{},rq:{},qt:[],qd:null,dy:{bk:[],en:[]},dl:null,snd:true,sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
@@ -264,8 +264,8 @@ function weekCard(){
 function home(){
  const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','person',T('ส่วนตัว','Personal')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
  const st=[['gym',streakHTML(30,38),T('streak วัน','Day streak'),"G='streak';"],['plan','<b>'+dueCount()+'</b>',T('งานค้าง/วันนี้','Tasks due')],['food','<b>'+foodTotal(today())+'</b>','kcal']];
- const gs=byStar(S.goals.filter(g=>!isCum(g)||gval(g)<100));
- return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>
+ const gs=byStar(S.goals.filter(g=>!goalDone(g)));
+ return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>${quoteCard()}
  <div class="nav5">${nav.map(n=>`<button onclick="go('${n[0]}')">${ico(n[1],30)}${n[2]}</button>`).join('')}</div>
  <div class="grid3">${st.map(x=>`<div class="stat" onclick="${x[3]||''}go('${x[0]}')">${x[1]}<span>${x[2]}</span></div>`).join('')}</div>
  ${weekCard()}<h2>${T('ปฏิทิน','Calendar')}</h2><div class="card">${cal()}</div>${dayDetail(selD,false)}
@@ -312,6 +312,21 @@ const hasSubs=g=>Array.isArray(g.subs);
 const leaves=g=>(g.subs||[]).flatMap(c=>c.items&&c.items.length?c.items:[c]);
 const gpct=g=>{const L=leaves(g);return L.length?Math.round(L.filter(x=>x.done).length/L.length*100):0};
 const isCum=g=>g.mode=='due'||g.mode=='none';
+let qOpen=false;
+const hashD=d=>{let h=0;for(const c of d)h=(h*31+c.charCodeAt(0))>>>0;return h};
+function todayQuote(){const a=S.qt||[];if(!a.length)return null;if(S.qd&&S.qd.d==today()&&S.qd.t&&a.includes(S.qd.t))return S.qd.t;let i=hashD(today())%a.length;if(a.length>1&&S.qd&&S.qd.t===a[i])i=(i+1)%a.length;S.qd={d:today(),t:a[i]};return a[i]}
+const lockQ=()=>{const t=todayQuote();if(t)S.qd={d:today(),t}};
+function qShuffle(){const a=S.qt||[];if(a.length<2)return toast(T('มีคำคมอันเดียว เพิ่มอีกได้ในตั้งค่า','Only one quote saved. Add more in Settings.'));const cur=todayQuote();let t;do{t=a[Math.floor(Math.random()*a.length)]}while(t===cur);S.qd={d:today(),t};save();render()}
+function qAdd(){const lines=val('qin').split(/\r?\n/).map(x=>x.trim().replace(/^(\d+[.)]\s+|[-•*]\s+)/,'')).filter(Boolean);S.qt=S.qt||[];const have=new Set(S.qt),add=[];lines.forEach(l=>{if(!have.has(l)){have.add(l);add.push(l)}});
+ if(!add.length)return toast(T('ไม่มีคำคมใหม่ให้เพิ่ม บรรทัดว่างหรือซ้ำกับที่มีอยู่','Nothing new to add. The lines were empty or already saved.'));
+ lockQ();S.qt.push(...add);save();render();toast(T('เพิ่ม '+add.length+' คำคมแล้ว','Added '+add.length+' quotes'))}
+async function qDel(i){const t=S.qt[i];if(t===undefined)return;if(!await askDel(T('ลบคำคม "'+t.slice(0,40)+'"','Delete quote "'+t.slice(0,40)+'"')))return;if(S.qd&&S.qd.t===t)S.qd=null;S.qt.splice(i,1);save();render()}
+async function qClear(){if(!(S.qt||[]).length)return;if(!await askDel(T('ลบคำคมทั้งหมด '+S.qt.length+' อัน','Delete all '+S.qt.length+' quotes')))return;S.qt=[];S.qd=null;save();render()}
+function quoteCard(){const q=todayQuote();if(!q)return '';return `<div class="card"><div style="font-size:17px;line-height:1.5;white-space:pre-wrap">“${esc(q)}”</div><div class="row" style="margin-top:6px;justify-content:flex-end"><button class="x" style="font-size:13px" onclick="qShuffle()">${T('สุ่มใหม่','Shuffle')}</button></div></div>`}
+function quoteSettings(){const a=S.qt||[];return `<div class="card"><b>${T('คำคมประจำวัน','Daily quote')}</b><p class="mut">${T('วางคำคมของคุณ บรรทัดละหนึ่งอัน แอปจะสุ่มโชว์วันละหนึ่งอันที่หน้าแรก','Paste your quotes, one per line. The app shows one at random each day on the home page.')}</p><textarea id="qin" placeholder="${T('วางคำคมที่นี่ บรรทัดละหนึ่งอัน','Paste quotes here, one per line')}" style="min-height:110px"></textarea><button class="btn" style="width:100%;margin-top:8px" onclick="qAdd()">${T('เพิ่มคำคม','Add quotes')}</button><div class="mut" style="margin-top:8px">${a.length} ${T('คำคมในคลัง','quotes saved')}</div>${a.length?`<div class="row"><button class="ghost" style="flex:1" onclick="qOpen=!qOpen;render()">${T('ดูและลบคำคม','View and delete')} ${qOpen?'▾':'▸'}</button><button class="ghost" onclick="qClear()">${T('ลบทั้งหมด','Delete all')}</button></div>`:''}${qOpen&&a.length?a.map((q,i)=>`<div class="row" style="align-items:flex-start"><span style="flex:1;white-space:pre-wrap">${esc(q)}</span><button class="x" onclick="qDel(${i})">×</button></div>`).join(''):''}</div>`}
+let GT='a';
+const goalDone=g=>{if(g.type=='auto')return (g.metric=='weight'||g.metric=='lift')&&autoV(g).pct>=100;if(!isCum(g))return false;return gval(g)>=100};
+const goalDoneMsg=()=>toast(T('เป้าหมายเสร็จแล้ว ย้ายไปแท็บเสร็จแล้ว','Goal completed. Moved to the Completed tab.'));
 const gval=g=>g.type=='auto'?autoV(g).pct:hasSubs(g)?gpct(g):(isCum(g)?latest(g.id):gv(g.id,today()));
 const KL={c:['เนื้อหา','Content'],p:['โจทย์','Problems'],o:['อื่นๆ','Other']};
 function subsHTML(g){
@@ -323,7 +338,7 @@ function subsHTML(g){
 const subsBlock=g=>{const L=leaves(g),d=L.filter(x=>x.done).length,o=gOpen==g.id;return `<div class="row" style="margin-top:8px"><button class="ghost" style="flex:1" onclick="gOpen='${o?'':g.id}';render()">${T('หัวข้อย่อย','Sub-topics')}${hasSubs(g)?' '+d+'/'+L.length:''} ${o?'▾':'▸'}</button></div>${o?subsHTML(g):''}`};
 function chAdd(id){const t=val('ch_'+id).trim();if(!t)return;const g=GF(id);(g.subs=g.subs||[]).push({id:uid(),t,done:false,items:[{id:uid(),t:'',k:'c',done:false},{id:uid(),t:'',k:'p',done:false}]});cO[g.subs[g.subs.length-1].id]=true;save();render()}
 function itAdd(gid,cid){const t=val('it_'+cid).trim();if(!t)return;const c=GF(gid).subs.find(x=>x.id==cid);(c.items=c.items||[]).push({id:uid(),t,k:val('ik_'+cid)||'o',done:false});save();render()}
-function subTg(gid,cid,iid){const c=GF(gid).subs.find(x=>x.id==cid);if(iid){const it=c.items.find(x=>x.id==iid);it.done=!it.done}else c.done=!c.done;save();render()}
+function subTg(gid,cid,iid){const was=goalDone(GF(gid)),c=GF(gid).subs.find(x=>x.id==cid);if(iid){const it=c.items.find(x=>x.id==iid);it.done=!it.done}else c.done=!c.done;save();render();if(!was&&goalDone(GF(gid)))goalDoneMsg()}
 async function chRm(gid,cid){const g=GF(gid),c0=g.subs.find(x=>x.id==cid)||{};if(!await askDel(T('ลบบท "'+c0.t+'" รวมรายการในบท','Delete chapter "'+c0.t+'" with its items')))return;g.subs=g.subs.filter(x=>x.id!=cid);if(!g.subs.length&&!g.list)delete g.subs;save();render()}
 async function itRm(gid,cid,iid){const c=GF(gid).subs.find(x=>x.id==cid),x0=c.items.find(x=>x.id==iid)||{},nm=x0.t||KL[x0.k||'o'][S.lang=='th'?0:1];if(!await askDel(T('ลบรายการ "'+nm+'"','Delete item "'+nm+'"')))return;c.items=c.items.filter(x=>x.id!=iid);save();render()}
 function gctl(g){
@@ -403,22 +418,23 @@ async function bkDel(id){const b=S.dy.bk.find(x=>x.id==id)||{},n=S.dy.en.filter(
 function goals(){return head(T('ส่วนตัว','Personal'),0,'person',lockBtn())+(needsUnlock()?lockScreen():lockPanel()+`<div class="seg s2"><button class="${PT=='g'?'on':''}" onclick="PT='g';render()">${T('เป้าหมาย','Goals')}</button><button class="${PT=='d'?'on':''}" onclick="PT='d';render()">${T('ไดอารี่','Diary')}</button></div>`+(PT=='d'?diaryView():goalsBody()))}
 function goalsBody(){
  const wk=n=>[6,5,4,3,2,1,0].map(i=>gv(n,back(i)));
- return `<div class="card"><input id="gn" placeholder="${T('ชื่อเป้าหมาย','Goal name')}" style="margin-bottom:8px">
+ const dn=S.goals.filter(goalDone),ac=S.goals.filter(g=>!goalDone(g));
+ return `<div class="seg s2"><button class="${GT=='a'?'on':''}" onclick="GT='a';render()">${T('กำลังทำ','In progress')} ${ac.length}</button><button class="${GT=='d'?'on':''}" onclick="GT='d';render()">${T('เสร็จแล้ว','Completed')} ${dn.length}</button></div>`+(GT=='a'?`<div class="card"><input id="gn" placeholder="${T('ชื่อเป้าหมาย','Goal name')}" style="margin-bottom:8px">
  <div class="row"><select id="gt" onchange="gKind(this.value)"><option value="check">${T('แบบติ๊ก','Check-off')}</option><option value="bar">${T('แบบแถบ %','Slider %')}</option><option value="list">${T('แบบหัวข้อย่อย','With sub-topics')}</option><option value="auto">${T('ผูกกับข้อมูลในแอป','Linked to app data')}</option></select><select id="gm" onchange="$('gd').style.display=this.value=='due'?'':'none'"><option value="daily">${T('รายวัน','Daily')}</option><option value="due">${T('มีกำหนดส่ง','Deadline')}</option><option value="none">${T('ไม่มีกำหนด','No deadline')}</option></select></div>
  <div id="ga" style="display:none"><div class="row"><select id="gmt" onchange="gMet(this.value)">${AM.map(m=>`<option value="${m[0]}">${S.lang=='th'?m[1]:m[2]}</option>`).join('')}</select><input id="gtg" type="number" inputmode="decimal" placeholder="${T('เป้าหมาย','Target')}"></div><div class="row"><select id="gpr" style="display:none"><option value="week">${T('สัปดาห์นี้','This week')}</option><option value="day">${T('วันนี้','Today')}</option></select><select id="gex" style="display:none">${S.ex.filter(e=>e.c=='reps').map(e=>`<option value="${e.id}">${esc(e.n)}</option>`).join('')}</select></div></div>
- <div class="row"><input id="gd" type="date" value="${back(-7)}" style="display:none"><button class="btn" style="width:100%" onclick="addGoal()">+ ${T('เพิ่มเป้าหมาย','Add goal')}</button></div></div>`+
- (byStar(S.goals).map(g=>{const due=g.mode=='due',v=gval(g);let ex;
+ <div class="row"><input id="gd" type="date" value="${back(-7)}" style="display:none"><button class="btn" style="width:100%" onclick="addGoal()">+ ${T('เพิ่มเป้าหมาย','Add goal')}</button></div></div>`:'')+
+ (byStar(GT=='a'?ac:dn).map(g=>{const due=g.mode=='due',v=gval(g);let ex;
   if(g.type=='auto')ex='';else if(hasSubs(g))ex=due?`<div class="mut" style="margin-top:6px">${T('กำหนด','Due')} ${g.due}</div>`:'';
   else if(isCum(g))ex=`<div class="mut" style="margin-top:6px">${due?T('กำหนด','Due')+' '+g.due+' · ':''}${v}%</div><div class="bar" style="margin-top:4px"><i style="width:${v}%"></i></div>`;
   else{const days=wk(g.id),avg=Math.round(days.reduce((a,b)=>a+b,0)/7);ex=`<div class="dots">${days.map(x=>`<i class="${x>=100?'on':''}" style="${x>0&&x<100?'background:var(--ac);opacity:'+(x/100)+';':''}"></i>`).join('')}</div><div class="mut" style="margin-top:6px">${T('เฉลี่ย 7 วัน','7-day avg')} ${avg}%</div><div class="bar" style="margin-top:4px"><i style="width:${avg}%"></i></div>`}
-  return `<div class="card">${ek==g.id+'||'?edForm(g.id,'',''):`<div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span><button class="x" onclick="starG('${g.id}')">${g.star?'★':'☆'}</button><button class="ghost sm" onclick="ek='${g.id}||';render()">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmGoal('${g.id}')">×</button></div>${g.note?noteH(g.note):''}`}${gctl(g)}${ex}${g.type=='auto'?'':subsBlock(g)}</div>`}).join('')||`<p class="mut">${T('เพิ่มเป้าหมายแรกของคุณ','Add your first goal.')}</p>`);
+  return `<div class="card">${ek==g.id+'||'?edForm(g.id,'',''):`<div class="row"><b style="flex:1">${esc(g.n)}</b><span class="mut">${gmeta(g)}</span><button class="x" onclick="starG('${g.id}')">${g.star?'★':'☆'}</button><button class="ghost sm" onclick="ek='${g.id}||';render()">${T('แก้ไข','Edit')}</button><button class="x" onclick="rmGoal('${g.id}')">×</button></div>${g.note?noteH(g.note):''}`}${gctl(g)}${ex}${g.type=='auto'?'':subsBlock(g)}</div>`}).join('')||`<p class="mut">${GT=='a'?T('เพิ่มเป้าหมายแรกของคุณ','Add your first goal.'):T('ยังไม่มีเป้าหมายที่เสร็จ เป้าหมายรายวันไม่นับว่าเสร็จ','No completed goals yet. Daily goals never count as completed.')}</p>`);
 }
 function addGoal(){const n=val('gn').trim();if(!n)return;
  if(val('gt')=='auto'){const m=val('gmt'),tg=+val('gtg');if(!(tg>0))return toast(T('ใส่ตัวเลขเป้าหมาย','Enter a target number'));if(m=='lift'&&!val('gex'))return toast(T('เลือกท่า','Pick an exercise'));
   const bw=[...S.bw].sort((a,b)=>a.d<b.d?-1:1);S.goals.push({id:uid(),n,type:'auto',mode:'auto',metric:m,target:tg,period:(m=='sleep'||m=='protein')?(val('gpr')||'week'):'week',ex:val('gex'),start:bw.length?bw[bw.length-1].w:null});save();render();return}
  const m=val('gm'),dd=val('gd');if(m=='due'&&!dd)return toast(T('เลือกวันกำหนด','Pick a due date'));const gid=uid(),gt=val('gt');S.goals.push({id:gid,n,type:gt=='list'?'check':gt,mode:m,due:dd,...(gt=='list'?{subs:[],list:true}:{})});if(gt=='list')gOpen=gid;save();render()}
 const rmGoal=async id=>{const g0=GF(id)||{};if(!await askDel(T('ลบเป้าหมาย "'+g0.n+'" รวมหัวข้อย่อยและความคืบหน้าทั้งหมด','Delete goal "'+g0.n+'" with all sub-topics and progress')))return;S.goals=S.goals.filter(g=>g.id!=id);delete S.glog[id];save();render()};
-const setG=(id,v)=>{(S.glog[id]=S.glog[id]||{})[today()]=v;save();render()};
+const setG=(id,v)=>{const g=GF(id),was=g&&goalDone(g);(S.glog[id]=S.glog[id]||{})[today()]=v;save();render();if(g&&!was&&goalDone(g))goalDoneMsg()};
 /* Food */
 const foodTotal=d=>S.food.filter(f=>f.d==d).reduce((a,f)=>a+f.k,0);
 const macT=d=>S.food.filter(f=>f.d==d).reduce((a,f)=>({k:a.k+f.k,p:a.p+(f.p||0),c:a.c+(f.c||0),f:a.f+(f.f||0)}),{k:0,p:0,c:0,f:0});
@@ -539,7 +555,7 @@ function gWork(){
    const e=exn(it.e),id=it.e,L=w[id]||[],tg=it.s[k],pv=prev(id,k),nm=sp?`<b>${'ABCDEF'[i]}</b> ${esc(e.n)} · `:'',pt=pv?T('ครั้งก่อน','Last')+' '+fmt(e,pv):'';
    if(k<L.length)r+=(edK==id+':'+k)?`<div class="act"><div class="mut">${nm}${T('แก้ไขเซ็ต','Edit set')} ${k+1}</div><div class="row"><input id="ea_${id}" type="number" inputmode="decimal" value="${L[k].a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="eb_${id}" type="number" inputmode="decimal" value="${L[k].b||''}" placeholder="kg">`}<button class="btn" onclick="saveSet('${id}',${k})">OK</button><button class="ghost" onclick="edK='';render()">${T('ยกเลิก','Cancel')}</button></div><input id="es_${id}" value="${esc(L[k].n||'')}" placeholder="${T('โน้ตของเซ็ตนี้ เช่น ความรู้สึก ข้อที่ผิด','Note for this set, e.g. how it felt, mistakes')}" style="margin-top:8px"></div>`:`<div class="row"><button class="ed" onclick="edK='${id}:${k}';render()">✓ ${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,L[k])} <span class="mut">${T('แตะเพื่อแก้','tap to edit')}</span></button><button class="x" onclick="rmSet('${id}',${k})">×</button></div>${L[k].n?noteH(L[k].n):''}`;
    else if(i==cur&&k==L.length){const sg=sug(e,pv,tg&&tg.a),t=sg||tg||pv||{a:'',b:''};
-    r+=`<div class="act"><div class="mut">${nm}${T('เซ็ต','Set')} ${k+1}</div><div class="mut">${[tg?T('แผน','Plan')+' '+fmt(e,tg):'',pt,sg?T('แนะนำ','Suggest')+' '+fmt(e,sg):'',bestOf(id)?T('สถิติ','PR')+' '+prShort(e,id):''].filter(Boolean).join(' · ')}</div><div class="row"><input id="a_${id}" type="number" inputmode="decimal" value="${t.a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="b_${id}" type="number" inputmode="decimal" value="${t.b||''}" placeholder="kg">`}<button class="btn" onclick="addSet('${id}')">✓</button><button class="ghost" onclick="addSet('${id}',1)">${T('วอร์ม','Warm')}</button></div></div>`}
+    r+=`<div class="act"><div class="mut">${nm}${T('เซ็ต','Set')} ${k+1}</div><div class="mut">${[tg?T('แผน','Plan')+' '+fmt(e,tg):'',pt,sg?T('แนะนำ','Suggest')+' '+fmt(e,sg):'',bestOf(id)?T('สถิติ','PR')+' '+prShort(e,id):''].filter(Boolean).join(' · ')}</div>${e.c=='time'?xtUI(id):''}<div class="row"><input id="a_${id}" type="number" inputmode="decimal" value="${e.c=='time'&&xtMin(id)!==null&&!xtRun(id)?xtMin(id):t.a}" placeholder="${e.c=='time'?'min':'reps'}">${e.c=='time'?'':`<input id="b_${id}" type="number" inputmode="decimal" value="${t.b||''}" placeholder="kg">`}<button class="btn" onclick="addSet('${id}')">✓</button><button class="ghost" onclick="addSet('${id}',1)">${T('วอร์ม','Warm')}</button></div></div>`}
    else if(tg)r+=`<div class="row mut"><span>${nm}${T('เซ็ต','Set')} ${k+1}: ${fmt(e,tg)}${pt?' · '+pt:''}</span></div>`});
   return `<div class="card" ${sp?'style="border-left:4px solid var(--ac)"':''}>${sp?'<div class="mut" style="letter-spacing:.1em">SUPERSET</div>':''}${b.map((it,i)=>`<div class="row"><b style="flex:1">${sp?'ABCDEF'[i]+' · ':''}${esc(exn(it.e).n)}</b><span class="mut">${mus(exn(it.e)).map(mn).join(', ')}</span></div>${exNotes(it.e)}`).join('')}<div class="sets">${wuRows(b,act)}${r}</div></div>`}).join('');
 }
@@ -554,7 +570,18 @@ function prCard(id){const e=exn(id);let r={e1:0,e1s:null,e1d:'',wt:0,wtS:null,wt
  if(!r.rp&&!r.e1)return '';
  const row=(l,v,d)=>`<div class="row"><span style="flex:1">${l}</span><b>${v}</b><span class="mut" style="width:52px;text-align:right">${d.slice(5)}</span></div>`;
  return `<div class="card"><b>${T('สถิติส่วนตัว','Personal records')}</b>${e.c=='time'?row(T('นานที่สุด','Longest'),r.rp+' min',r.rpd):r.e1?row(T('1RM โดยประมาณ','Est. 1RM'),r.e1.toFixed(1)+' kg',r.e1d)+row(T('หนักที่สุด','Heaviest'),fmt(e,r.wtS),r.wtd):row(T('rep สูงสุด','Most reps'),r.rp,r.rpd)}${r.e1?`<div class="mut" style="margin-top:6px">${T('1RM ประมาณจากสูตร Epley','1RM estimated with the Epley formula')}</div>`:''}</div>`}
-function addSet(id,wu){const a=+val('a_'+id),b=+val('b_'+id)||0;if(!a)return;const d=today(),e=exn(id);
+let xt={};
+const xtMs=id=>{const x=xt[id];return x?x.acc+(x.run?Date.now()-x.start:0):0};
+const xtRun=id=>!!(xt[id]&&xt[id].run);
+const xtMin=id=>{const m=Math.round(xtMs(id)/6000)/10;return m>0?m:null};
+const fmtClock=ms=>{const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),c=t%60,p=n=>String(n).padStart(2,'0');return (h?h+':':'')+p(m)+':'+p(c)};
+function xtUI(id){const run=xtRun(id),has=xtMs(id)>0;
+ return `<div class="row" style="margin-bottom:6px"><b id="xt_${id}" style="font-size:28px;flex:1;font-variant-numeric:tabular-nums">${fmtClock(xtMs(id))}</b>${run?`<button class="btn" onclick="xtStop('${id}')">${T('หยุด','Stop')}</button>`:`<button class="btn" onclick="xtStart('${id}')">${has?T('ต่อ','Resume'):T('เริ่มจับเวลา','Start timer')}</button>`}${has&&!run?`<button class="ghost" onclick="xtReset('${id}')">${T('รีเซ็ต','Reset')}</button>`:''}</div>`}
+const xtStart=id=>{xt[id]={acc:(xt[id]||{}).acc||0,start:Date.now(),run:true};render()};
+const xtStop=id=>{const x=xt[id];if(!x)return;x.acc+=Date.now()-x.start;x.run=false;render()};
+const xtReset=id=>{delete xt[id];render()};
+setInterval(()=>{for(const id in xt){if(xt[id].run){const e=$('xt_'+id);if(e)e.textContent=fmtClock(xtMs(id))}}},250);
+function addSet(id,wu){const e=exn(id),a=(e.c=='time'&&xtRun(id))?(xtMin(id)||0):+val('a_'+id),b=+val('b_'+id)||0;if(!a)return e.c=='time'&&xtRun(id)?toast(T('จับเวลาสั้นเกินไป','The timer is too short')):0;const d=today();delete xt[id];
  if(wu){((S.wu[d]=S.wu[d]||{})[id]=S.wu[d][id]||[]).push({a,b});save();render();rest(0);return}
  const pb=bestOf(id),m=est(e,{a,b});
  ((S.wk[d]=S.wk[d]||{})[id]=S.wk[d][id]||[]).push({a,b});
@@ -785,6 +812,7 @@ function settings(){
  <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
  <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
  <div class="card row"><span style="flex:1"><b>${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b></span><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div>
+ ${quoteSettings()}
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
  <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
  <div class="card"><b>${T('สำรองข้อมูล','Backup')}</b><p class="mut">${T('คัดลอกข้อมูลไปอีกเครื่องด้วยมือ','Copy your data to another device manually')}</p>
