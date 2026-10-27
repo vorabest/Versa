@@ -16,11 +16,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#000;--fg:#fff;--card:rgba(255,255,255,.08);--mut:rgba(255,255,255,.62);--ac:#fff;--bd:rgba(255,255,255,.16);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#000;--fg:#fff;--card:rgba(255,255,255,.08);--mut:rgba(255,255,255,.62);--ac:#fff;--bd:rgba(255,255,255,.16);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:0;--ff:"Prompt","Noto Sans Thai",system-ui,-apple-system,sans-serif}
 :root[data-theme=black]{--bg:#0c0c0e;--card:rgba(255,255,255,.07);--ac:#c9c9d1}
 :root[data-theme=light]{--bg:#f4f6fb;--fg:#0b1b3a;--card:rgba(11,27,58,.06);--mut:rgba(11,27,58,.6);--ac:#2457d6;--bd:rgba(11,27,58,.16)}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Prompt",system-ui,-apple-system,"Noto Sans Thai",sans-serif;font-size:16px;line-height:1.45}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ff);font-size:16px;line-height:1.45}
 #app{max-width:560px;margin:0 auto;padding:16px 16px 120px}
 h1{font-size:34px;line-height:1.15;margin:0 0 4px;font-weight:700}h2{font-size:24px;margin:20px 0 8px;font-weight:600}.card>.row>b,.card>b{font-size:18px;font-weight:600}.chip{font-size:15px;padding:8px 14px}
 .mut{color:var(--mut);font-size:14px}
@@ -70,18 +70,45 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 #dlg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20;padding:24px}.dbox{background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:16px;padding:18px;max-width:340px;width:100%}.dbox p{margin:0 0 14px}
 .sm{padding:4px 10px;font-size:13px}
 #bn{max-width:560px;margin:0 auto;padding:16px 16px 0}#bn:empty{display:none}
+/* Bottom tab bar */
+#tabs{display:none;position:fixed;left:0;right:0;bottom:0;z-index:8;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--bd)}
+body.hastb #tabs{display:block}
+body.hastb.kb #tabs{display:none}
+@supports (background:color-mix(in srgb,red 50%,transparent)){#tabs{background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
+#tabs .tin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));height:58px}
+#tabs button{background:none;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 2px;font-size:11px;font-weight:500;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
+#tabs button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+#tabs button.on{color:var(--ac);font-weight:600}
+#tabs button.on svg{stroke-width:2.1}
+body.hastb{--tbh:calc(58px + env(safe-area-inset-bottom,0px))}
+body.hastb.kb{--tbh:0px}
+body.hastb #app{padding-bottom:calc(var(--tbh) + 40px)}
+body.hastb #rest{bottom:var(--tbh);padding-bottom:10px;z-index:7}
+/* Looks */
+html[data-sty=sharp] :is(.card,.tile,.stat,.seg,.warn,.dbox,.mg button,.bar,.bar i,#tabs,#toast){border-radius:4px}
+html[data-sty=sharp] :is(.btn,.ghost,input,select,textarea,.seg button,.cd,.hb,.act,.chip,.hbtn){border-radius:3px}
+html[data-sty=soft] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act,input,select,textarea,.ghost){border-color:transparent}
+html[data-sty=soft] :is(.card,.tile,.stat,.seg,.warn,.dbox){border-radius:22px}
+html[data-sty=soft] :is(.btn,.ghost,input,select,textarea,.seg button,.mg button){border-radius:14px}
+html[data-sty=soft] #tabs{background:var(--bg);left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom,0px));padding-bottom:0;border:1px solid var(--bd);border-radius:26px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+html[data-sty=soft] body.hastb{--tbh:calc(78px + env(safe-area-inset-bottom,0px))}
+html[data-sty=soft] body.hastb.kb{--tbh:0px}
+html[data-sty=outline] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act,input,select,textarea){background:transparent;border-color:var(--mut)}
+html[data-sty=outline] :is(.ghost,.chip){border-color:var(--mut)}
+.pv{font-size:18px;margin:8px 0 0}
 </style>
 </head>
 <body>
 <div id="bn"></div>
 <div id="app"></div>
+<nav id="tabs" aria-label="Main"></nav>
 <div id="toast"></div>
 <div id="dlg"></div>
 <div id="rest"><div class="in"><b id="rt">0:00</b><button class="ghost" onclick="rest(0)">Stop</button></div></div>
 <script>
 const K='helper_v1';let S={};
 try{S=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
-S=Object.assign({user:null,logged:false,ses:{},wu:{},xn:{},rq:{},qt:[],qd:null,dy:{bk:[],en:[]},dl:null,snd:true,sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
+S=Object.assign({user:null,logged:false,ses:{},wu:{},xn:{},rq:{},qt:[],qd:null,dy:{bk:[],en:[]},dl:null,snd:true,sl:[],sgoal:8,sp:null,pg:0,cg:0,fg:0,bw:[],bgoal:0,theme:'navy',font:'prompt',sty:'round',cbg:'#000000',cac:'#ffffff',lang:'th',tasks:[],goals:[],glog:{},
 ex:[{id:'e1',n:'Bench Press',c:'reps',m:'chest',t:'free'},{id:'e2',n:'Bicep Curl',c:'reps',m:'bicep',t:'free'},{id:'e3',n:'Squat',c:'reps',m:'legs',t:'free'},{id:'e4',n:'Running',c:'time',m:'cardio',t:'body'}],
 plans:[],main:null,wk:{},food:[],kgoal:2000,skip:{}},S);
 let syncT=null;
@@ -130,12 +157,29 @@ const ico=(k,s=24)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="n
 IC.person='<circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>';
 IC.unlock='<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.6-1.7"/>';
 IC.lock='<rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>';
+IC.home='<path d="M4 11.5L12 4l8 7.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/>';
 IC.health='<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>';
 const head=(t,b,i,x)=>`<div class="top"><button class="ghost" onclick="${b||"go('home')"}">←</button>${i?ico(i,28):''}<h1>${t}</h1>${x||''}</div>`;
 const lum=c=>{const n=parseInt(c.slice(1),16);return((n>>16)*299+(n>>8&255)*587+(n&255)*114)/1000};
+const FONTS=[
+{k:'prompt',n:'Prompt',g:['Prompt:wght@400;500;600;700'],css:'"Prompt"'},
+{k:'sarabun',n:'Sarabun',g:['Sarabun:wght@400;500;600;700'],css:'"Sarabun"'},
+{k:'kanit',n:'Kanit',g:['Kanit:wght@400;500;600;700'],css:'"Kanit"'},
+{k:'plex',n:'IBM Plex Sans Thai',g:['IBM+Plex+Sans+Thai:wght@400;500;600;700'],css:'"IBM Plex Sans Thai"'},
+{k:'noto',n:'Noto Sans Thai',g:['Noto+Sans+Thai:wght@400;500;600;700'],css:'"Noto Sans Thai"'},
+{k:'mitr',n:'Mitr',g:['Mitr:wght@400;500;600'],css:'"Mitr"'},
+{k:'inter',n:'Inter',g:['Inter:wght@400;500;600;700','Noto+Sans+Thai:wght@400;500;600;700'],css:'"Inter"'},
+{k:'serif',n:'Noto Serif Thai',g:['Noto+Serif+Thai:wght@400;500;600;700'],css:'"Noto Serif Thai",serif'},
+{k:'system',n:'System',g:[],css:'system-ui,-apple-system'},
+{k:'mono',n:'Mono',g:[],css:'ui-monospace,Menlo,Consolas,monospace'}];
+const fam=f=>f.css+',"Noto Sans Thai",system-ui,sans-serif';
+function loadFont(f){(f.g||[]).forEach(g=>{const id='gf-'+g.split(':')[0];if(document.getElementById(id))return;const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+g+'&display=swap';document.head.appendChild(l)})}
+const STY=[['round',['มน','Rounded'],['มุมมน มีเส้นขอบ แถบเมนูติดขอบล่าง','Rounded corners with borders and a docked menu bar']],['sharp',['เหลี่ยม','Sharp'],['มุมเหลี่ยม คมชัด','Square corners, crisp look']],['soft',['นุ่ม','Soft'],['มุมมนมาก ไม่มีเส้นขอบ แถบเมนูลอย','Extra round, no borders, floating menu bar']],['outline',['เส้นขอบ','Outline'],['การ์ดโปร่ง เน้นเส้นขอบ','Transparent cards with strong outlines']]];
+const setLook=(k,v)=>{S[k]=v;save();render()};
 function applyTheme(){const c=S.cbg||'#000000',a=S.cac||'#ffffff',dk=lum(c)<140,r=document.documentElement.style,P=(k,v)=>r.setProperty(k,v);
  P('--bg',c);P('--ac',a);P('--onac',lum(a)<140?'#fff':'#0b1b3a');P('--fg',dk?'#fff':'#0b1b3a');
- P('--card',dk?'rgba(255,255,255,.08)':'rgba(11,27,58,.06)');P('--mut',dk?'rgba(255,255,255,.62)':'rgba(11,27,58,.6)');P('--bd',dk?'rgba(255,255,255,.16)':'rgba(11,27,58,.16)')}
+ P('--card',dk?'rgba(255,255,255,.08)':'rgba(11,27,58,.06)');P('--mut',dk?'rgba(255,255,255,.62)':'rgba(11,27,58,.6)');P('--bd',dk?'rgba(255,255,255,.16)':'rgba(11,27,58,.16)');
+ const f=FONTS.find(x=>x.k==S.font)||FONTS[0];loadFont(f);P('--ff',fam(f));document.documentElement.dataset.sty=S.sty||'round'}
 
 function render(){
  applyTheme();document.documentElement.lang=S.lang;
@@ -150,8 +194,15 @@ function render(){
  else if(V=='gym')h=gym();
  else if(V=='food')h=food();
  else if(V=='set')h=settings();
- $('bn').innerHTML=banner();$('app').innerHTML=h;
+ $('bn').innerHTML=banner();$('app').innerHTML=h;drawTabs();
 }
+const TABV=['home','plan','goal','gym','food','set'];
+function drawTabs(){const on=TABV.includes(V),t=$('tabs');document.body.classList.toggle('hastb',on);if(!on){t.innerHTML='';return}
+ const L=[['home','home',T('หน้าแรก','Home')],['plan','cal',T('ปฏิทิน','Planner')],['goal','person',T('ส่วนตัว','Personal')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
+ t.innerHTML='<div class="tin">'+L.map(x=>`<button class="${V==x[0]?'on':''}" onclick="tabGo('${x[0]}')">${ico(x[1],24)}<span>${x[2]}</span></button>`).join('')+'</div>'}
+function tabGo(k){if(V==k){window.scrollTo({top:0,behavior:'smooth'});return}go(k);window.scrollTo(0,0)}
+document.addEventListener('focusin',e=>{const t=e.target;if(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)&&!/^(checkbox|range|color|file)$/.test(t.type))document.body.classList.add('kb')});
+document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))document.body.classList.remove('kb')},80));
 let aMode='in',aMsg='',aE='';
 const say=t=>{aMsg=t;const m=$('am');if(m)m.textContent=t};
 const keepA=()=>{aE=val('ae')};
@@ -261,12 +312,9 @@ function weekCard(){
  <div class="grid3">${cell(wd+'/7',T('วันออกกำลัง','Workout days'))}${cell(sa?Math.floor(sa/60)+'h '+(sa%60)+'m':'-',T('นอนเฉลี่ย','Sleep avg'))}${cell(gp==null?'-':gp+'%',T('เป้าหมายรายวัน','Daily goal'))}</div>
  <div class="grid3" style="margin-top:8px">${cell(avg('k')||'-','kcal '+T('เฉลี่ย','avg'))}${cell(avg('p')?avg('p')+' g':'-',T('โปรตีนเฉลี่ย','Protein avg'))}${cell(wv,T('น้ำหนักเฉลี่ย kg','Avg weight kg'))}</div>`;
 }
-function home(){
- const nav=[['plan','cal',T('ปฏิทิน','Planner')],['goal','person',T('ส่วนตัว','Personal')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
- const st=[['gym',streakHTML(30,38),T('streak วัน','Day streak'),"G='streak';"],['plan','<b>'+dueCount()+'</b>',T('งานค้าง/วันนี้','Tasks due')],['food','<b>'+foodTotal(today())+'</b>','kcal']];
+function home(){ const st=[['gym',streakHTML(30,38),T('streak วัน','Day streak'),"G='streak';"],['plan','<b>'+dueCount()+'</b>',T('งานค้าง/วันนี้','Tasks due')],['food','<b>'+foodTotal(today())+'</b>','kcal']];
  const gs=byStar(S.goals.filter(g=>!goalDone(g)));
  return `<h1 style="font-size:42px;margin-top:8px">${T('สวัสดี','Hi')} ${esc(S.user.n)}</h1>${quoteCard()}
- <div class="nav5">${nav.map(n=>`<button onclick="go('${n[0]}')">${ico(n[1],30)}${n[2]}</button>`).join('')}</div>
  <div class="grid3">${st.map(x=>`<div class="stat" onclick="${x[3]||''}go('${x[0]}')">${x[1]}<span>${x[2]}</span></div>`).join('')}</div>
  ${weekCard()}<h2>${T('ปฏิทิน','Calendar')}</h2><div class="card">${cal()}</div>${dayDetail(selD,false)}
  ${needsUnlock()?lockedHome():`<h2>${T('เป้าหมาย','Goals')}</h2>${gs.map(g=>`<div class="card"><div class="row"><b style="flex:1">${g.star?'★ ':''}${esc(g.n)}</b><span class="mut">${gmeta(g)}</span></div>${gctl(g)}</div>`).join('')||`<p class="mut">${T('ยังไม่มีเป้าหมาย','No goals yet')}</p>`}`}`;
@@ -811,6 +859,8 @@ function settings(){
  <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#000000')}</div>
  <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
  <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
+ <div class="card"><b>${T('ฟอนต์','Font')}</b><div class="chips">${FONTS.map(f=>{loadFont(f);return `<button class="chip ${(S.font||'prompt')==f.k?'on':''}" style="font-family:${fam(f)}" onclick="setLook('font','${f.k}')">${f.n}</button>`}).join('')}</div><p class="pv">${T('ตัวอย่าง กขค 0123 Aa','Preview กขค 0123 Aa')}</p></div>
+ <div class="card"><b>${T('สไตล์','Style')}</b><div class="chips">${STY.map(y=>`<button class="chip ${(S.sty||'round')==y[0]?'on':''}" onclick="setLook('sty','${y[0]}')">${T(y[1][0],y[1][1])}</button>`).join('')}</div><p class="mut">${T(STY.find(y=>y[0]==(S.sty||'round'))[2][0],STY.find(y=>y[0]==(S.sty||'round'))[2][1])}</p></div>
  <div class="card row"><span style="flex:1"><b>${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b></span><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div>
  ${quoteSettings()}
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
