@@ -71,10 +71,9 @@ input[type=range]{padding:0}input[type=checkbox]{width:22px;height:22px;flex:non
 .sm{padding:4px 10px;font-size:13px}
 #bn{max-width:560px;margin:0 auto;padding:16px 16px 0}#bn:empty{display:none}
 /* Bottom tab bar */
-#tabs{display:none;position:fixed;left:0;right:0;bottom:0;z-index:8;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--bd)}
+#tabs{display:none;position:fixed;left:0;right:0;bottom:0;z-index:8;-webkit-transform:translateZ(0);transform:translateZ(0);will-change:transform;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--bd)}
 body.hastb #tabs{display:block}
 body.hastb.kb #tabs{display:none}
-@supports (background:color-mix(in srgb,red 50%,transparent)){#tabs{background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}}
 #tabs .tin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));height:58px}
 #tabs button{background:none;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 2px;font-size:11px;font-weight:500;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
 #tabs button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
@@ -97,6 +96,11 @@ html[data-sty=outline] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act,input,se
 html[data-sty=outline] :is(.ghost,.chip){border-color:var(--mut)}
 .pv{font-size:18px;margin:8px 0 0}
 .card>b{display:block}.seg.s3{margin:8px 0 14px}.pzg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px}.pz{background:none;border:0;padding:0;color:var(--fg);cursor:pointer;text-align:center;font-size:11px;min-width:0}.pzb{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;aspect-ratio:1/1;border-radius:14px;border:1px solid var(--bd);padding:8px;margin-bottom:5px}.pzb i{width:60%;height:8px;border-radius:9px;display:block}.pzb b{font-size:16px;font-weight:600}.pz.on .pzb{outline:2px solid var(--fg);outline-offset:2px}.ad{width:32px;height:32px;border-radius:50%;border:1px solid var(--bd);padding:0;cursor:pointer;flex:none}.ad.on{outline:2px solid var(--fg);outline-offset:2px}
+/* Undo bar */
+#undo{position:fixed;left:12px;right:12px;bottom:calc(var(--tbh,env(safe-area-inset-bottom,0px)) + 12px);max-width:520px;margin:0 auto;display:none;align-items:center;gap:12px;padding:12px 14px 16px 18px;border-radius:16px;background:rgba(var(--bgrgb,0,0,0),.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--bd);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:15;overflow:hidden}
+#undo.up{bottom:calc(var(--tbh,env(safe-area-inset-bottom,0px)) + 76px)}
+#undo .udr{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--ac);transform-origin:left center;animation:udrain 6s linear forwards}
+@keyframes udrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 /* Theme packs */
 h1,h2,.stat b,.hero h1{font-family:var(--fh,var(--ff))}
 .thg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0 4px}.thk{background:none;border:0;padding:0;color:var(--fg);font-size:13px;text-align:center;cursor:pointer;min-width:0}.thv{display:block;height:84px;border-radius:16px;padding:12px;border:1px solid var(--bd);margin-bottom:5px}.thm{display:flex;align-items:center;gap:10px;height:100%;padding:0 14px}.thm b{font-size:24px;font-weight:600;line-height:1}.thm i{display:block;width:34px;height:8px;border-radius:9px;margin-left:auto}.thk.on .thv{outline:2px solid var(--fg);outline-offset:2px}
@@ -157,6 +161,7 @@ html[data-th=pastel] :is(h1,h2){font-weight:500}
 <div id="bn"></div>
 <div id="app"></div>
 <nav id="tabs" aria-label="Main"></nav>
+<div id="undo" role="status" style="display:none"></div>
 <div id="toast"></div>
 <div id="dlg"></div>
 <div id="rest"><div class="in"><b id="rt">0:00</b><button class="ghost" onclick="rest(0)">Stop</button></div></div>
@@ -170,28 +175,58 @@ let syncT=null;
 let saveFail=false,USED=0,QUOTA=5e6,bnHide=false,bnHide2=false,bnHide3=false;
 const refreshBanner=()=>{const e=$('bn');if(e)e.innerHTML=banner()};
 function store(){const j=JSON.stringify(S);USED=j.length;try{localStorage.setItem(K,j);saveFail=false}catch(e){saveFail=true}}
-const save=()=>{S.ts=Date.now();store();if(typeof refreshBanner=='function')refreshBanner();clearTimeout(syncT);syncT=setTimeout(push,1500)};
+let UNDO_PEND=null,UNDO_SNAP=null,UNDO_T=null;
+const save=()=>{if(UNDO_PEND&&Date.now()-UNDO_PEND.t<2000){const sn=UNDO_PEND.snap;UNDO_PEND=null;if(typeof offerUndo=='function')offerUndo(sn)}else{UNDO_PEND=null;if(UNDO_SNAP&&typeof hideUndo=='function')hideUndo()}S.ts=Date.now();store();if(typeof refreshBanner=='function')refreshBanner();clearTimeout(syncT);syncT=setTimeout(push,1500)};
 try{USED=(localStorage.getItem(K)||'').length}catch(e){}
 const SB_URL='https://wgpvgmnsrencoxogevti.supabase.co',SB_KEY='sb_publishable_FzYwg0GyqtgjbchTEwCpDA_IRO2Wo6I';
 const sb=(window.supabase&&supabase.createClient)?supabase.createClient(SB_URL,SB_KEY):null;
 let UID=null,EM='',SYNC='',SYNCAT=0,REC=false,busy=false;
 const persist=store;
 const hasData=()=>S.tasks.length||S.goals.length||S.food.length||S.bw.length||S.plans.length||Object.keys(S.wk).length||S.ex.length>4;
-async function push(){if(!sb||!UID)return;try{const {error}=await sb.from('app_state').upsert({user_id:UID,data:S,updated_at:new Date().toISOString()});SYNC=error?'err':'ok';if(!error){SYNCAT=Date.now();bnHide3=false}}catch(e){SYNC='err'}refreshBanner()}
-async function pull(){
- if(!sb||!UID)return;
- try{
-  const {data,error}=await sb.from('app_state').select('data').eq('user_id',UID).maybeSingle();
+/* Sync: 3-way merge item by item, with compare-and-set so one device never overwrites another */
+const isO=v=>v&&typeof v=='object'&&!Array.isArray(v);
+function stab(v){if(Array.isArray(v))return '['+v.map(stab).join(',')+']';if(isO(v))return '{'+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+stab(v[k])).join(',')+'}';const j=JSON.stringify(v);return j===undefined?'undefined':j}
+const EQ=(a,b)=>stab(a)===stab(b);
+function keyFor(L,R){for(const k of ['id','d']){const ok=a=>a.every(x=>isO(x)&&(typeof x[k]=='string'||typeof x[k]=='number'))&&new Set(a.map(x=>x[k])).size==a.length;if((L.length||R.length)&&ok(L)&&ok(R))return k}return null}
+function mrg(L,R,B,pref){
+ if(EQ(L,R))return L;if(EQ(L,B))return R;if(EQ(R,B))return L;
+ if(L===undefined)return R;if(R===undefined)return L;
+ if(isO(L)&&isO(R)){const b=isO(B)?B:{},o={};for(const k of new Set([...Object.keys(L),...Object.keys(R)])){const v=mrg(L[k],R[k],b[k],pref);if(v!==undefined)o[k]=v}return o}
+ if(Array.isArray(L)&&Array.isArray(R)){const b=Array.isArray(B)?B:[],k=keyFor(L,R);
+  if(k){const m=a=>{const o=new Map();a.forEach(x=>{if(isO(x)&&x[k]!==undefined)o.set(x[k],x)});return o},ml=m(L),mr=m(R),mb=m(b),f=pref=='L'?L:R,g=pref=='L'?R:L,fm=pref=='L'?ml:mr,ids=[...f.map(x=>x[k]),...g.map(x=>x[k]).filter(i=>!fm.has(i))],out=[];
+   for(const id of ids){const v=mrg(ml.get(id),mr.get(id),mb.get(id),pref);if(v!==undefined)out.push(v)}return out}
+  if(b.length&&EQ(L.slice(0,b.length),b)&&EQ(R.slice(0,b.length),b)){const lx=L.slice(b.length),rx=R.slice(b.length).filter(x=>!lx.some(y=>EQ(x,y)));return b.concat(lx,rx)}
+  return pref=='L'?L:R}
+ return pref=='L'?L:R}
+const CORE=o=>{const c=Object.assign({},o);delete c.uid;delete c.local;delete c.ts;return c};
+const BASEK='helper_base';
+const getBase=()=>{try{const b=JSON.parse(localStorage.getItem(BASEK));return b&&b.uid==UID?b.data:undefined}catch(e){return undefined}};
+const setBase=()=>{try{localStorage.setItem(BASEK,JSON.stringify({uid:UID,data:CORE(S)}))}catch(e){}};
+let LASTU,chain=Promise.resolve();
+const queued=fn=>{const p=chain.then(fn,fn);chain=p.catch(()=>{});return p};
+async function casPush(){
+ const now=new Date().toISOString();
+ const q=LASTU?sb.from('app_state').update({data:S,updated_at:now}).eq('user_id',UID).eq('updated_at',LASTU).select('updated_at'):sb.from('app_state').insert({user_id:UID,data:S,updated_at:now}).select('updated_at');
+ const {data,error}=await q;
+ if(error){if(!LASTU&&(error.code=='23505'||/duplicate|conflict|already/i.test(error.message||'')))return false;throw error}
+ if(!data||!data.length)return false;
+ LASTU=data[0].updated_at||now;setBase();return true}
+async function syncCore(){
+ for(let n=0;n<4;n++){
+  const {data:row,error}=await sb.from('app_state').select('data,updated_at').eq('user_id',UID).maybeSingle();
   if(error)throw error;
-  if(!data){S.uid=UID;save();await push();return}
-  const r=data.data||{},apply=()=>{S=Object.assign({},S,r);S.uid=UID;persist()};
-  if(S.uid==UID){if((r.ts||0)>(S.ts||0))apply();else if((S.ts||0)>(r.ts||0))await push()}
-  else if(!hasData()||await askP(T('มีข้อมูลบนเซิร์ฟเวอร์แล้ว ตกลง = ใช้ข้อมูลจากเซิร์ฟเวอร์ ยกเลิก = ใช้ข้อมูลในเครื่องนี้','Server already has data. OK = use server data, Cancel = use this device')))apply();
-  else{S.uid=UID;save();await push()}
-  SYNC='ok';SYNCAT=Date.now();bnHide3=false
- }catch(e){SYNC='err'}
- refreshBanner()
-}
+  if(!row){LASTU=null;S.uid=UID;if(!S.ts)S.ts=Date.now();persist();if(await casPush())return;continue}
+  LASTU=row.updated_at;const R=row.data||{};
+  if(S.uid!=UID){
+   if(!hasData()||await askP(T('มีข้อมูลบนเซิร์ฟเวอร์แล้ว ตกลง = ใช้ข้อมูลจากเซิร์ฟเวอร์ ยกเลิก = ใช้ข้อมูลในเครื่องนี้','Server already has data. OK = use server data, Cancel = use this device'))){S=Object.assign({},S,R);S.uid=UID;persist();setBase();return}
+   S.uid=UID;S.ts=Date.now();persist();if(await casPush())return;continue}
+  const L=CORE(S),Rc=CORE(R),M=mrg(L,Rc,getBase(),(S.ts||0)>=(R.ts||0)?'L':'R'),chL=!EQ(M,L),needPush=!EQ(M,Rc);
+  if(chL){S=Object.assign({},M,{uid:UID,local:S.local,ts:Date.now()});persist();if(typeof hideUndo=='function')hideUndo()}
+  if(!needPush){setBase();return}
+  if(await casPush())return}
+ throw new Error('sync conflict')}
+const push=()=>queued(async()=>{if(!sb||!UID)return;try{if(LASTU===undefined)await syncCore();else if(!await casPush())await syncCore();SYNC='ok';SYNCAT=Date.now();bnHide3=false}catch(e){SYNC='err'}refreshBanner()});
+const pull=()=>queued(async()=>{if(!sb||!UID)return;try{await syncCore();SYNC='ok';SYNCAT=Date.now();bnHide3=false}catch(e){SYNC='err'}refreshBanner()});
 const T=(th,en)=>S.lang=='th'?th:en;
 const $=id=>document.getElementById(id), val=id=>($(id)||{}).value||'';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -377,15 +412,16 @@ function render(){
  else if(V=='gym')h=gym();
  else if(V=='food')h=food();
  else if(V=='set')h=settings();
- $('bn').innerHTML=banner();$('app').innerHTML=h;drawTabs();
+ $('bn').innerHTML=banner();$('app').innerHTML=h;drawTabs();wakeSync();
 }
 const TABV=['home','plan','goal','gym','food','set'];
-function drawTabs(){const on=TABV.includes(V),t=$('tabs');document.body.classList.toggle('hastb',on);if(!on){t.innerHTML='';return}
+function drawTabs(){const on=TABV.includes(V),t=$('tabs');document.body.classList.toggle('hastb',on);kbCheck();if(!on){t.innerHTML='';return}
  const L=[['home','home',T('หน้าแรก','Home')],['plan','cal',T('ปฏิทิน','Planner')],['goal','person',T('ส่วนตัว','Personal')],['gym','gym',T('ฟิตเนส','Fitness')],['food','health',T('สุขภาพ','Health')],['set','set',T('ตั้งค่า','Settings')]];
  t.innerHTML='<div class="tin">'+L.map(x=>`<button class="${V==x[0]?'on':''}" onclick="tabGo('${x[0]}')">${ico(x[1],24)}<span>${x[2]}</span></button>`).join('')+'</div>'}
 function tabGo(k){if(V==k){window.scrollTo({top:0,behavior:'smooth'});return}go(k);window.scrollTo(0,0)}
-document.addEventListener('focusin',e=>{const t=e.target;if(/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)&&!/^(checkbox|range|color|file)$/.test(t.type))document.body.classList.add('kb')});
-document.addEventListener('focusout',()=>setTimeout(()=>{const a=document.activeElement;if(!a||!/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))document.body.classList.remove('kb')},80));
+function kbCheck(){const vv=window.visualViewport,a=document.activeElement,typing=!!a&&/^(INPUT|TEXTAREA)$/.test(a.tagName)&&!/^(checkbox|range|color|file|button|submit)$/.test(a.type||''),open=!!vv&&vv.scale<=1.02&&(window.innerHeight-vv.height)>140;document.body.classList.toggle('kb',open&&typing)}
+if(window.visualViewport){visualViewport.addEventListener('resize',kbCheck);visualViewport.addEventListener('scroll',kbCheck)}
+window.addEventListener('pageshow',()=>{kbCheck();drawTabs()});document.addEventListener('visibilitychange',kbCheck);document.addEventListener('focusout',()=>setTimeout(kbCheck,120));
 let aMode='in',aMsg='',aE='';
 const say=t=>{aMsg=t;const m=$('am');if(m)m.textContent=t};
 const keepA=()=>{aE=val('ae')};
@@ -437,7 +473,7 @@ async function boot(){
 async function logout(){
  if(!await askP(T('ออกจากระบบ ข้อมูลในเครื่องนี้จะถูกล้าง ข้อมูลบนเซิร์ฟเวอร์ยังอยู่','Log out? Data on this device will be cleared. The server copy stays.')))return;
  await push();if(SYNC=='err')return toast(T('ซิงค์ไม่สำเร็จ จึงยังไม่ออกจากระบบ','Sync failed, so you were not logged out'));
- try{await sb.auth.signOut()}catch(e){}try{localStorage.removeItem(K)}catch(e){}location.reload();
+ try{await sb.auth.signOut()}catch(e){}try{localStorage.removeItem(K);localStorage.removeItem('helper_base')}catch(e){}location.reload();
 }
 function useLocal(){S.local=true;if(!S.user||!S.user.n)S.user={n:T('คุณ','there')};save();V='home';render()}
 async function syncNow(){await pull();render()}
@@ -476,7 +512,10 @@ function dayDetail(k,add){
 }
 let dlgRes=null;
 const askP=(msg,okl)=>new Promise(r=>{dlgRes=r;const e=$('dlg');e.innerHTML=`<div class="dbox"><p>${esc(msg)}</p><div class="row"><button class="ghost" style="flex:1" onclick="dlgDone(0)">${T('ยกเลิก','Cancel')}</button><button class="btn" style="flex:1" onclick="dlgDone(1)">${okl||T('ตกลง','OK')}</button></div></div>`;e.style.display='flex'});
-const askDel=msg=>askP(msg,T('ลบ','Delete'));
+const askDel=async msg=>{const ok=await askP(msg,T('ลบ','Delete'));if(ok)UNDO_PEND={snap:JSON.stringify(S),t:Date.now()};return ok};
+function offerUndo(sn){UNDO_SNAP=sn;const e=$('undo');if(!e)return;e.innerHTML=`<span style="flex:1;font-weight:600">${T('ลบแล้ว','Deleted')}</span><button class="btn" style="padding:8px 18px" onclick="undoDo()">${T('ย้อนกลับ','Undo')}</button><i class="udr"></i>`;const r=$('rest');e.className=(r&&r.style.display=='block')?'up':'';e.style.display='flex';clearTimeout(UNDO_T);UNDO_T=setTimeout(hideUndo,6000)}
+function hideUndo(){clearTimeout(UNDO_T);UNDO_SNAP=null;const e=$('undo');if(e)e.style.display='none'}
+function undoDo(){if(!UNDO_SNAP)return;let o;try{o=JSON.parse(UNDO_SNAP)}catch(e){return}hideUndo();S=o;save();render();toast(T('คืนค่าแล้ว','Restored'))}
 const askC=(msg,opts)=>new Promise(r=>{dlgRes=r;const e=$('dlg');e.innerHTML=`<div class="dbox"><p>${esc(msg)}</p>${opts.map((o,i)=>`<button class="btn" style="width:100%;margin-bottom:8px" onclick="dlgPick(${i})">${esc(o)}</button>`).join('')}<button class="ghost" style="width:100%" onclick="dlgPick(-1)">${T('ยกเลิก','Cancel')}</button></div>`;e.style.display='flex'});
 function dlgPick(i){$('dlg').style.display='none';const r=dlgRes;dlgRes=null;if(r)r(i)}
 function dlgDone(ok){$('dlg').style.display='none';const r=dlgRes;dlgRes=null;if(r)r(!!ok)}
@@ -1025,10 +1064,33 @@ async function restAsk(d,reason){const i=await askC(T('พักผ่อนเ�
 async function skipDay(){const r=val('sr').trim();await restAsk(today(),r)}
 const restOn=d=>restAsk(d,'')
 /* Rest timer */
-let AC=null;
-function unlockAudio(){try{const C=typeof AudioContext!='undefined'?AudioContext:typeof webkitAudioContext!='undefined'?webkitAudioContext:null;if(!C)return;AC=AC||new C();if(AC.state=='suspended')AC.resume()}catch(e){}}
-function beep(){if(!S.snd||!AC)return;try{[0,.25,.5].forEach(t=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=880;g.gain.value=.25;o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.15)})}catch(e){}}
+let AC=null,AUD=null,primed=false;
+function wavBlob(){const sr=22050,seq=[[0,.16,880],[.24,.40,880],[.48,.72,1175]],n=Math.ceil(sr*.8),buf=new ArrayBuffer(44+n*2),v=new DataView(buf),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+ w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ for(const [a,b,f] of seq)for(let i=Math.floor(a*sr);i<Math.min(n,Math.floor(b*sr));i++){const t=i/sr-a,d=b-a,env=Math.max(0,Math.min(1,t/.012,(d-t)/.02));v.setInt16(44+i*2,Math.round(32767*.85*env*(Math.sin(2*Math.PI*f*t)*.8+Math.sin(4*Math.PI*f*t)*.2)),true)}
+ return new Blob([buf],{type:'audio/wav'})}
+function sndAudio(){if(!AUD){try{AUD=new Audio(URL.createObjectURL(wavBlob()));AUD.preload='auto'}catch(e){}}return AUD}
+function sessType(t){try{if(navigator.audioSession)navigator.audioSession.type=t}catch(e){}}
+function unlockAudio(force){if(!S.snd&&!force)return;
+ try{const C=typeof AudioContext!='undefined'?AudioContext:typeof webkitAudioContext!='undefined'?webkitAudioContext:null;if(C){AC=AC||new C();if(AC.state!='running')AC.resume()}}catch(e){}
+ try{const a=sndAudio();if(a&&!primed){primed=true;a.muted=true;const p=a.play(),done=()=>{try{a.pause();a.currentTime=0;a.muted=false}catch(e){}};if(p&&p.then)p.then(done,()=>{primed=false;a.muted=false});else done()}}catch(e){}}
+['touchend','pointerdown','click'].forEach(ev=>document.addEventListener(ev,()=>unlockAudio(),{passive:true}));
+function webBeep(){if(!AC)return;try{if(AC.state!='running')AC.resume();[0,.24,.48].forEach((t,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=i==2?1175:880;g.gain.value=.5;o.connect(g);g.connect(AC.destination);o.start(AC.currentTime+t);o.stop(AC.currentTime+t+.18)})}catch(e){}}
+function beep(force){if(!S.snd&&!force)return;try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+ sessType('playback');const a=sndAudio();
+ if(a){try{a.muted=false;a.volume=1;a.currentTime=0;const p=a.play();if(p&&p.then)p.then(()=>{},()=>webBeep())}catch(e){webBeep()}}else webBeep();
+ setTimeout(()=>sessType('auto'),1600)}
 const togSnd=()=>{S.snd=!S.snd;save();unlockAudio();if(S.snd)beep();render()};
+const testSnd=()=>{unlockAudio(true);beep(true);toast(T('กำลังเล่นเสียง','Playing sound'))};
+/* Keep the screen awake while a workout is running */
+let WAKE=null,WAKEB=false;
+const sesOn=()=>{const x=(S.ses||{})[today()];return !!(x&&!x.en)};
+async function wakeSync(){const need=S.awake!==false&&sesOn();
+ if(need&&!WAKE&&!WAKEB&&!document.hidden&&navigator.wakeLock){WAKEB=true;try{const l=await navigator.wakeLock.request('screen');WAKE=l;l.addEventListener('release',()=>{if(WAKE===l)WAKE=null})}catch(e){}WAKEB=false}
+ else if(!need&&WAKE){const l=WAKE;WAKE=null;try{await l.release()}catch(e){}}}
+const togAwake=()=>{S.awake=S.awake===false;save();wakeSync();render()};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wakeSync()});
+['touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{if(!WAKE&&S.awake!==false&&sesOn())wakeSync()},{passive:true}));
 function rest(s){clearInterval(rt);if(!s){$('rest').style.display='none';return}
  unlockAudio();const end=Date.now()+s*1000;$('rest').style.display='block';
  const tick=()=>{const l=Math.ceil((end-Date.now())/1000);if(l<=0){clearInterval(rt);$('rt').textContent=T('พักครบแล้ว!','Rest over!');try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}beep();setTimeout(()=>{$('rest').style.display='none'},3000);return}
@@ -1050,7 +1112,8 @@ function settings(){
    <button class="ghost" onclick="S.pre='mono';S.mode='dark';S.acc='';S.th='';save();render()">${T('รีเซ็ตเป็นค่าเริ่มต้น','Reset to default')}</button></details></div>`}
  <div class="card"><b>${T('ฟอนต์','Font')}</b><div class="chips">${FONTS.map(f=>{loadFont(f);return `<button class="chip ${(S.font||'prompt')==f.k?'on':''}" style="font-family:${fam(f)}" onclick="setLook('font','${f.k}')">${f.n}</button>`}).join('')}</div><p class="pv">${T('ตัวอย่าง กขค 0123 Aa','Preview กขค 0123 Aa')}</p></div>
  ${S.th?'':`<div class="card"><b>${T('สไตล์','Style')}</b><div class="chips">${STY.map(y=>`<button class="chip ${(S.sty||'round')==y[0]?'on':''}" onclick="setLook('sty','${y[0]}')">${T(y[1][0],y[1][1])}</button>`).join('')}</div><p class="mut">${T(STY.find(y=>y[0]==(S.sty||'round'))[2][0],STY.find(y=>y[0]==(S.sty||'round'))[2][1])}</p></div>`}
- <div class="card row"><span style="flex:1"><b>${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b></span><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div>
+ <div class="card"><div class="row"><b style="flex:1">${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b><button class="ghost" onclick="testSnd()">${T('ทดสอบ','Test')}</button><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div><p class="mut" style="margin:8px 0 0">${T('ไม่ได้ยินเสียง? เปิดเสียงเครื่อง ปิดโหมดเงียบ แล้วกดทดสอบหนึ่งครั้ง','No sound? Turn the volume up, switch off Silent mode, then tap Test once.')}</p></div>
+  <div class="card row"><span style="flex:1"><b>${T('เปิดหน้าจอค้างตอนออกกำลังกาย','Keep screen on during workouts')}</b></span><button class="chip ${S.awake!==false?'on':''}" onclick="togAwake()">${S.awake!==false?T('เปิด','On'):T('ปิด','Off')}</button></div>
  ${quoteSettings()}
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
  <div class="card"><b>${T('เป้าโภชนาการต่อวัน','Daily nutrition goals')}</b><div class="row" style="margin-top:8px"><input id="kg" type="number" value="${S.kgoal}" placeholder="kcal"><input id="pg" type="number" value="${S.pg||''}" placeholder="P g"><input id="cg" type="number" value="${S.cg||''}" placeholder="C g"><input id="fg" type="number" value="${S.fg||''}" placeholder="F g"></div><button class="btn" onclick="S.kgoal=+val('kg')||2000;S.pg=+val('pg')||0;S.cg=+val('cg')||0;S.fg=+val('fg')||0;save();render()">OK</button></div>
