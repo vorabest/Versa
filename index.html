@@ -85,7 +85,7 @@ body.hastb.kb{--tbh:0px}
 body.hastb #app{padding-bottom:calc(var(--tbh) + 40px)}
 body.hastb #rest{bottom:var(--tbh);padding-bottom:10px;z-index:7}
 /* Looks */
-html[data-sty=sharp] :is(.card,.tile,.stat,.seg,.warn,.dbox,.mg button,.bar,.bar i,#tabs,#toast){border-radius:4px}
+html[data-sty=sharp] :is(.pzb,.card,.tile,.stat,.seg,.warn,.dbox,.mg button,.bar,.bar i,#tabs,#toast){border-radius:4px}
 html[data-sty=sharp] :is(.btn,.ghost,input,select,textarea,.seg button,.cd,.hb,.act,.chip,.hbtn){border-radius:3px}
 html[data-sty=soft] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act,input,select,textarea,.ghost){border-color:transparent}
 html[data-sty=soft] :is(.card,.tile,.stat,.seg,.warn,.dbox){border-radius:22px}
@@ -96,6 +96,61 @@ html[data-sty=soft] body.hastb.kb{--tbh:0px}
 html[data-sty=outline] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act,input,select,textarea){background:transparent;border-color:var(--mut)}
 html[data-sty=outline] :is(.ghost,.chip){border-color:var(--mut)}
 .pv{font-size:18px;margin:8px 0 0}
+.card>b{display:block}.seg.s3{margin:8px 0 14px}.pzg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px}.pz{background:none;border:0;padding:0;color:var(--fg);cursor:pointer;text-align:center;font-size:11px;min-width:0}.pzb{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;aspect-ratio:1/1;border-radius:14px;border:1px solid var(--bd);padding:8px;margin-bottom:5px}.pzb i{width:60%;height:8px;border-radius:9px;display:block}.pzb b{font-size:16px;font-weight:600}.pz.on .pzb{outline:2px solid var(--fg);outline-offset:2px}.ad{width:32px;height:32px;border-radius:50%;border:1px solid var(--bd);padding:0;cursor:pointer;flex:none}.ad.on{outline:2px solid var(--fg);outline-offset:2px}
+/* Theme packs */
+h1,h2,.stat b,.hero h1{font-family:var(--fh,var(--ff))}
+.thg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0 4px}.thk{background:none;border:0;padding:0;color:var(--fg);font-size:13px;text-align:center;cursor:pointer;min-width:0}.thv{display:block;height:84px;border-radius:16px;padding:12px;border:1px solid var(--bd);margin-bottom:5px}.thm{display:flex;align-items:center;gap:10px;height:100%;padding:0 14px}.thm b{font-size:24px;font-weight:600;line-height:1}.thm i{display:block;width:34px;height:8px;border-radius:9px;margin-left:auto}.thk.on .thv{outline:2px solid var(--fg);outline-offset:2px}
+html[data-th] body{background:transparent}
+html[data-th] body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--pg)}
+/* cartoon */
+html[data-th=cartoon] :is(.card,.tile,.stat,.seg,.warn,.dbox,.mg button,.act){border:3px solid #141414;box-shadow:4px 4px 0 #141414}
+html[data-th=cartoon] :is(.card,.tile,.stat,.warn,.dbox,.seg){border-radius:16px}
+html[data-th=cartoon] :is(.btn,.ghost,.chip){border:2.5px solid #141414}
+html[data-th=cartoon] :is(.btn,.chip.on,.seg button.on){box-shadow:2px 2px 0 #141414}
+html[data-th=cartoon] :is(.card,.tile,.stat,.seg,.warn,.dbox,.mg button){--fg:#141414;--mut:rgba(20,20,20,.66);--card:#fff;background:#fff;color:#141414}
+html[data-th=cartoon] :is(input,select,textarea){border:2.5px solid #141414;background:#fff;color:#141414;border-radius:12px}
+html[data-th=cartoon] :is(h1,h2){letter-spacing:.03em;text-shadow:2px 2px 0 #fff}
+html[data-th=cartoon] #tabs{border-top:3px solid var(--fg);-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--bg)}
+/* luxury */
+html[data-th=luxury] :is(.card,.tile,.stat,.warn){background-image:linear-gradient(145deg,rgba(var(--acrgb),.13),rgba(var(--acrgb),.02));border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 10px 28px rgba(0,0,0,.4)}
+html[data-th=luxury] :is(h1,h2){font-weight:500;letter-spacing:.01em}
+html[data-th=luxury] :is(.btn,.chip.on,.seg button.on,.hb.on){background-image:linear-gradient(135deg,rgba(255,255,255,.38),rgba(0,0,0,.14));border-color:transparent}
+/* liquid glass */
+html[data-th=glass] :is(.card,.tile,.stat){position:relative;isolation:isolate}
+html[data-th=glass] :is(.card,.tile,.stat,.seg,.warn){background:linear-gradient(135deg,rgba(255,255,255,calc(var(--gls)*.6)),rgba(255,255,255,.03) 46%,rgba(255,255,255,.09)),var(--card);-webkit-backdrop-filter:blur(18px) saturate(190%) brightness(1.06);backdrop-filter:blur(18px) saturate(190%) brightness(1.06);border:1px solid rgba(255,255,255,.28);border-radius:28px;box-shadow:inset 0 1.5px 1px rgba(255,255,255,.75),inset 0 -2px 8px rgba(255,255,255,.14),inset 0 0 22px rgba(255,255,255,.10),0 18px 40px rgba(0,0,0,.20),0 2px 6px rgba(0,0,0,.10)}
+html[data-th=glass] :is(.card,.tile,.stat)::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;background:radial-gradient(130% 70% at 18% -10%,rgba(255,255,255,var(--gls)),transparent 55%),radial-gradient(90% 50% at 100% 110%,rgba(255,255,255,calc(var(--gls)*.45)),transparent 60%)}
+html[data-th=glass] :is(.card,.tile,.stat)::after,html[data-th=glass] #tabs::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.08) 38%,rgba(255,255,255,.06) 62%,rgba(255,255,255,.75));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+html[data-th=glass] :is(.btn,.chip.on,.seg button.on,.hb.on){background-image:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.05) 55%,rgba(255,255,255,.18));border-color:rgba(255,255,255,.55);box-shadow:inset 0 1px 1px rgba(255,255,255,.8),inset 0 -2px 6px rgba(255,255,255,.2),0 6px 18px rgba(var(--acrgb),.40)}
+html[data-th=glass] :is(.btn,.ghost,.chip){border-radius:99px}
+html[data-th=glass] :is(.ghost,.chip:not(.on)){background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.06));-webkit-backdrop-filter:blur(12px) saturate(170%);backdrop-filter:blur(12px) saturate(170%);border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 1px 1px rgba(255,255,255,.55)}
+html[data-th=glass] :is(input,select,textarea){background:rgba(255,255,255,.14);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.35);border-radius:16px;box-shadow:inset 0 1px 3px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.3)}
+html[data-th=glass] #tabs{background:linear-gradient(135deg,rgba(255,255,255,calc(var(--gls)*.7)),rgba(255,255,255,.04) 50%,rgba(255,255,255,.12)),linear-gradient(rgba(var(--bgrgb),.42),rgba(var(--bgrgb),.42)),var(--card);-webkit-backdrop-filter:blur(24px) saturate(190%) brightness(1.06);backdrop-filter:blur(24px) saturate(190%) brightness(1.06);border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.7),inset 0 -2px 8px rgba(255,255,255,.12),0 14px 34px rgba(0,0,0,.26)}
+html[data-th=glass] #tabs button{margin:5px 2px;border-radius:20px}
+html[data-th=glass] #tabs button.on{background:linear-gradient(180deg,rgba(var(--acrgb),.34),rgba(var(--acrgb),.10));box-shadow:inset 0 1px 1px rgba(255,255,255,.7),0 3px 10px rgba(0,0,0,.12)}
+html[data-th=glass] :is(h1,h2){font-weight:600;letter-spacing:-.01em}
+/* neon */
+html[data-th=neon] :is(.card,.tile,.stat,.seg,.warn,.dbox,.mg button,.act){border:1px solid rgba(var(--acrgb),.6);border-radius:18px;box-shadow:0 0 12px rgba(var(--acrgb),.28),inset 0 0 14px rgba(var(--acrgb),.07)}
+html[data-th=neon] :is(.btn,.chip.on,.seg button.on,.hb.on){background-image:linear-gradient(90deg,var(--ac),var(--ac2));border-color:transparent;box-shadow:0 0 14px rgba(var(--acrgb),.55)}
+html[data-th=neon] :is(h1,h2){text-shadow:0 0 14px rgba(var(--acrgb),.65)}
+html[data-th=neon] :is(#tabs,.top,.tile) svg{filter:drop-shadow(0 0 4px var(--ac))}
+html[data-th=neon] #tabs button.on{text-shadow:0 0 8px var(--ac)}
+/* colorful */
+html[data-th=colorful] :is(.card,.tile,.stat,.seg,.warn,.mg button,.act){border:0;box-shadow:0 6px 16px rgba(60,40,100,.10)}
+html[data-th=colorful] :is(.card,.tile,.warn,.dbox){border-radius:26px}
+html[data-th=colorful] .card:nth-of-type(5n+1){background:var(--c1)}html[data-th=colorful] .card:nth-of-type(5n+2){background:var(--c2)}html[data-th=colorful] .card:nth-of-type(5n+3){background:var(--c3)}html[data-th=colorful] .card:nth-of-type(5n+4){background:var(--c4)}html[data-th=colorful] .card:nth-of-type(5n){background:var(--c5)}
+html[data-th=colorful] .stat:nth-child(3n+1){background:var(--c1)}html[data-th=colorful] .stat:nth-child(3n+2){background:var(--c2)}html[data-th=colorful] .stat:nth-child(3n){background:var(--c4)}
+html[data-th=colorful] .tile:nth-child(4n+1){background:var(--c1)}html[data-th=colorful] .tile:nth-child(4n+2){background:var(--c2)}html[data-th=colorful] .tile:nth-child(4n+3){background:var(--c3)}html[data-th=colorful] .tile:nth-child(4n){background:var(--c4)}
+html[data-th=colorful] :is(.card,.stat,.tile,.seg,.warn){--fg:#2a2140;--mut:rgba(42,33,64,.62);color:#2a2140}
+html[data-th=colorful] :is(input,select,textarea){background:#fff;color:#2a2140;border-color:transparent}
+html[data-th=colorful] #tabs button:nth-child(1) svg{color:#ff6b8b}html[data-th=colorful] #tabs button:nth-child(2) svg{color:#ff9f2e}html[data-th=colorful] #tabs button:nth-child(3) svg{color:#2eb67d}html[data-th=colorful] #tabs button:nth-child(4) svg{color:#3a8df5}html[data-th=colorful] #tabs button:nth-child(5) svg{color:#9b6bf2}html[data-th=colorful] #tabs button:nth-child(6) svg{color:#12b5c4}
+/* nature */
+html[data-th=nature] :is(.card,.tile,.stat,.seg,.warn){-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1.5px solid var(--bd);border-radius:28px;box-shadow:0 6px 22px rgba(var(--acrgb),.14)}
+html[data-th=nature] :is(.btn,.ghost,.chip,.seg button){border-radius:99px}
+html[data-th=nature] :is(input,select,textarea){border-radius:18px}
+html[data-th=nature] :is(h1,h2){font-weight:600;letter-spacing:.02em}
+/* pastel */
+html[data-th=pastel] :is(.card,.tile,.stat,.seg,.warn){border:0;border-radius:24px;box-shadow:0 8px 24px rgba(var(--acrgb),.12)}
+html[data-th=pastel] :is(h1,h2){font-weight:500}
 </style>
 </head>
 <body>
@@ -170,16 +225,144 @@ const FONTS=[
 {k:'mitr',n:'Mitr',g:['Mitr:wght@400;500;600'],css:'"Mitr"'},
 {k:'inter',n:'Inter',g:['Inter:wght@400;500;600;700','Noto+Sans+Thai:wght@400;500;600;700'],css:'"Inter"'},
 {k:'serif',n:'Noto Serif Thai',g:['Noto+Serif+Thai:wght@400;500;600;700'],css:'"Noto Serif Thai",serif'},
+{k:'mali',n:'Mali',g:['Mali:wght@400;500;600;700'],css:'"Mali"'},
 {k:'system',n:'System',g:[],css:'system-ui,-apple-system'},
 {k:'mono',n:'Mono',g:[],css:'ui-monospace,Menlo,Consolas,monospace'}];
-const fam=f=>f.css+',"Noto Sans Thai",system-ui,sans-serif';
+const fam=f=>(f.css+',"Noto Sans Thai",system-ui,sans-serif').replace(/"/g,"'");
 function loadFont(f){(f.g||[]).forEach(g=>{const id='gf-'+g.split(':')[0];if(document.getElementById(id))return;const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family='+g+'&display=swap';document.head.appendChild(l)})}
 const STY=[['round',['มน','Rounded'],['มุมมน มีเส้นขอบ แถบเมนูติดขอบล่าง','Rounded corners with borders and a docked menu bar']],['sharp',['เหลี่ยม','Sharp'],['มุมเหลี่ยม คมชัด','Square corners, crisp look']],['soft',['นุ่ม','Soft'],['มุมมนมาก ไม่มีเส้นขอบ แถบเมนูลอย','Extra round, no borders, floating menu bar']],['outline',['เส้นขอบ','Outline'],['การ์ดโปร่ง เน้นเส้นขอบ','Transparent cards with strong outlines']]];
 const setLook=(k,v)=>{S[k]=v;save();render()};
-function applyTheme(){const c=S.cbg||'#000000',a=S.cac||'#ffffff',dk=lum(c)<140,r=document.documentElement.style,P=(k,v)=>r.setProperty(k,v);
- P('--bg',c);P('--ac',a);P('--onac',lum(a)<140?'#fff':'#0b1b3a');P('--fg',dk?'#fff':'#0b1b3a');
+const PRE=[
+{k:'mono',n:['มอนโน','Mono'],dark:['#000000','#ffffff'],light:['#ffffff','#000000']},
+{k:'midnight',n:['เที่ยงคืน','Midnight'],dark:['#0b1020','#8ab4ff'],light:['#f4f6fb','#2457d6']},
+{k:'graphite',n:['กราไฟต์','Graphite'],dark:['#0c0c0e','#c9c9d1'],light:['#f2f2f4','#3a3a44']},
+{k:'forest',n:['ป่า','Forest'],dark:['#0d1a14','#7fd1a8'],light:['#f1f6f2','#1f7a52']},
+{k:'ocean',n:['ทะเล','Ocean'],dark:['#07181c','#6fd6e0'],light:['#eef7f8','#0e7c8a']},
+{k:'plum',n:['ม่วง','Plum'],dark:['#170e1c','#e6a8ff'],light:['#f8f2fa','#8a3fb0']},
+{k:'ember',n:['อัมพร','Ember'],dark:['#1a120c','#ffb27a'],light:['#faf4ee','#b4561a']},
+{k:'rose',n:['กุหลาบ','Rose'],dark:['#1c0e12','#ff8fa8'],light:['#fcf1f3','#c4325a']}];
+const ACC=[
+{k:'mono',d:'#ffffff',l:'#000000'},{k:'blue',d:'#8ab4ff',l:'#2457d6'},{k:'teal',d:'#5fd3e0',l:'#0e7c8a'},{k:'green',d:'#7fd1a8',l:'#1f7a52'},{k:'lime',d:'#c6e86a',l:'#5a7a0a'},{k:'yellow',d:'#ffd666',l:'#9a6a00'},{k:'orange',d:'#ffb27a',l:'#b4561a'},{k:'red',d:'#ff8a80',l:'#c0392b'},{k:'pink',d:'#ff8fb8',l:'#c4325a'},{k:'purple',d:'#d0a8ff',l:'#7a3fb0'},{k:'gray',d:'#c9c9d1',l:'#3a3a44'}];
+const thHx=c=>{const n=parseInt(c.slice(1),16);return[n>>16,n>>8&255,n&255]};
+const thTo=a=>'#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const thRl=c=>{const [r,g,b]=thHx(c).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b};
+const thCr=(a,b)=>{const x=thRl(a),y=thRl(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+function fixContrast(ac,bg,min=4.5){if(thCr(ac,bg)>=min)return ac;const to=thCr('#ffffff',bg)>=thCr('#000000',bg)?[255,255,255]:[0,0,0],a=thHx(ac);for(let t=.05;t<=1.001;t+=.05){const c=thTo(a.map((v,i)=>v+(to[i]-v)*t));if(thCr(c,bg)>=min)return c}return thTo(to)}
+const curMode=()=>S.mode=='auto'?((window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark'):(S.mode=='light'?'light':'dark');
+function themeInit(){const c=(S.cbg||'#000000').toLowerCase(),a=(S.cac||'#ffffff').toLowerCase();
+ for(const p of PRE)for(const m of ['dark','light'])if(p[m][0]==c&&p[m][1]==a){S.pre=p.k;S.mode=m;S.acc='';return}
+ S.mode=lum(c)<140?'dark':'light';S.pre='custom';S.acc=''}
+const setMode=m=>{if(S.pre=='custom')S.pre='mono';S.mode=m;save();render()};
+const setPre=k=>{S.pre=k;S.acc='';save();render()};
+const setAcc=k=>{S.tca='';if(!S.th&&S.pre=='custom')S.pre='mono';S.acc=k;save();render()};
+try{matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{if(S.mode=='auto')applyTheme()})}catch(e){}
+const rg=c=>thHx(c).join(',');
+const LG=g=>`radial-gradient(120% 55% at 50% -8%,${g},transparent 62%),radial-gradient(90% 40% at 100% 100%,rgba({ac},.10),transparent 60%)`;
+const NG=g=>`radial-gradient(70% 40% at 12% 0%,${g},transparent 60%),radial-gradient(70% 45% at 100% 100%,rgba({ac},.18),transparent 60%)`;
+const LN=(a,b)=>`linear-gradient(180deg,${a},${b})`;
+const GL=(a,b,c,o=.45)=>`radial-gradient(circle 120px at 80% 24%,rgba(255,255,255,${o}),transparent 72%),radial-gradient(circle 90px at 12% 60%,rgba(255,255,255,${o*.65}),transparent 72%),radial-gradient(70% 45% at 12% 8%,${a},transparent 62%),radial-gradient(65% 45% at 92% 20%,${b},transparent 62%),radial-gradient(75% 50% at 50% 100%,${c},transparent 62%)`;
+const TABC=['#ff6b8b','#ff9f2e','#2eb67d','#3a8df5','#9b6bf2','#12b5c4'];
+const PK=[
+{k:'cartoon',n:['การ์ตูน','Cartoon'],font:'mali',sty:'round',hf:{css:"'Bangers'",g:['Bangers']},d:{m:'light',fg:'#141414',card:'#ffffff',bd:'#141414',mut:'rgba(20,20,20,.66)'},
+ pv:v=>`background:#fff;border:2.5px solid #141414;box-shadow:3px 3px 0 #141414;border-radius:12px`,
+ v:[{k:'sunny',n:['แดดจ้า','Sunny'],bg:'#ffd93b',ac:'#2447e0'},{k:'sky',n:['ฟ้าใส','Sky'],bg:'#7fd0e6',ac:'#b3122e'},{k:'candy',n:['ลูกกวาด','Candy'],bg:'#ff9ec7',ac:'#5b2bd9'},{k:'mint',n:['มิ้นต์','Mint'],bg:'#8fe3b5',ac:'#d92b1a'},{k:'grape',n:['องุ่น','Grape'],bg:'#c4a8ff',ac:'#c2123f'},{k:'orange',n:['ส้ม','Orange'],bg:'#ffa94d',ac:'#1a3fc7'}]},
+{k:'luxury',n:['หรูหรา','Luxury'],font:'serif',sty:'round',hf:{css:"'Playfair Display'",g:['Playfair+Display:wght@500;600;700']},d:{m:'dark',card:'rgba({ac},.06)',bd:'rgba({ac},.30)'},
+ pv:v=>`background:linear-gradient(145deg,rgba(${rg(v.ac)},.20),rgba(${rg(v.ac)},.03));border:1px solid rgba(${rg(v.ac)},.5);border-radius:14px`,
+ v:[{k:'wine',n:['ไวน์','Wine'],bg:'#12060a',ac:'#e3c07a',fg:'#f4ead5',pg:LG('rgba(140,24,52,.55)')},{k:'emerald',n:['มรกต','Emerald'],bg:'#04120d',ac:'#d9c48a',fg:'#eef3e6',pg:LG('rgba(14,110,78,.45)')},{k:'sapphire',n:['ไพลิน','Sapphire'],bg:'#060b1c',ac:'#c3d0f2',fg:'#e9eefc',pg:LG('rgba(40,70,170,.5)')},{k:'noir',n:['โนร์','Noir'],bg:'#0a0a0a',ac:'#e8b4a0',fg:'#f3e8e2',pg:LG('rgba(120,70,60,.35)')},{k:'amethyst',n:['อเมทิสต์','Amethyst'],bg:'#12091c',ac:'#e7c6ff',fg:'#f3eafb',pg:LG('rgba(110,40,170,.5)')}]},
+{k:'glass',n:['ลิควิดกลาส','Liquid Glass'],font:'inter',sty:'soft',hf:{css:"'Inter'",g:['Inter:wght@500;600;700']},d:{},
+ pv:v=>`background:linear-gradient(135deg,rgba(255,255,255,.38),rgba(255,255,255,.08)),${v.card};border:1px solid ${v.bd};box-shadow:inset 0 1px 0 rgba(255,255,255,.6);border-radius:18px`,
+ v:[{k:'clear',n:['ใส','Clear'],m:'light',bg:'#cfe0f5',ac:'#0a6cff',fg:'#0e1a33',card:'rgba(255,255,255,.34)',bd:'rgba(255,255,255,.75)',mut:'rgba(14,26,51,.66)',pg:GL('rgba(255,140,200,.95)','rgba(110,185,255,.95)','rgba(165,140,255,.95)')},
+  {k:'midnight',n:['เที่ยงคืน','Midnight'],m:'dark',bg:'#0b1230',ac:'#8fbaff',fg:'#f4f6ff',card:'rgba(255,255,255,.08)',bd:'rgba(255,255,255,.26)',mut:'rgba(244,246,255,.68)',pg:GL('rgba(120,80,255,.55)','rgba(0,150,255,.42)','rgba(255,70,150,.36)',.22)},
+  {k:'aurora',n:['ออโรร่า','Aurora'],m:'dark',bg:'#06161a',ac:'#6ff0c8',fg:'#effcf8',card:'rgba(255,255,255,.08)',bd:'rgba(255,255,255,.26)',mut:'rgba(239,252,248,.68)',pg:GL('rgba(0,230,170,.40)','rgba(110,90,255,.40)','rgba(0,170,220,.34)',.22)},
+  {k:'sunrise',n:['รุ่งอรุณ','Sunrise'],m:'light',bg:'#fde3d3',ac:'#d9482a',fg:'#3a1d14',card:'rgba(255,255,255,.36)',bd:'rgba(255,255,255,.8)',mut:'rgba(58,29,20,.66)',pg:GL('rgba(255,150,130,.95)','rgba(255,215,130,.95)','rgba(255,150,205,.85)')},
+  {k:'bloom',n:['บลูม','Bloom'],m:'light',bg:'#f6d7ea',ac:'#c0287a',fg:'#3d1730',card:'rgba(255,255,255,.36)',bd:'rgba(255,255,255,.8)',mut:'rgba(61,23,48,.66)',pg:GL('rgba(255,120,190,.9)','rgba(190,150,255,.9)','rgba(255,190,150,.85)')},
+  {k:'lagoon',n:['ลากูน','Lagoon'],m:'light',bg:'#c9ecf0',ac:'#0a7f93',fg:'#0b2f38',card:'rgba(255,255,255,.34)',bd:'rgba(255,255,255,.78)',mut:'rgba(11,47,56,.66)',pg:GL('rgba(60,210,215,.9)','rgba(120,170,255,.85)','rgba(130,235,190,.85)')},
+  {k:'mono',n:['ขาวดำ','Mono'],m:'dark',bg:'#050505',ac:'#ffffff',fg:'#ffffff',card:'rgba(255,255,255,.07)',bd:'rgba(255,255,255,.32)',mut:'rgba(255,255,255,.68)',pg:GL('rgba(255,255,255,.26)','rgba(255,255,255,.12)','rgba(255,255,255,.16)',.3)}]},
+{k:'neon',n:['นีออน','Neon'],font:'kanit',sty:'round',hf:{css:"'Orbitron'",g:['Orbitron:wght@500;700']},d:{m:'dark',fg:'#f2f0ff',card:'rgba({ac},.05)',bd:'rgba({ac},.55)',mut:'rgba(242,240,255,.62)'},
+ pv:v=>`border:1px solid ${v.ac};box-shadow:0 0 12px rgba(${rg(v.ac)},.5),inset 0 0 10px rgba(${rg(v.ac)},.12);border-radius:14px`,
+ v:[{k:'cyber',n:['ไซเบอร์','Cyber'],bg:'#06040f',ac:'#00f5ff',ac2:'#ff2bd6',pg:NG('rgba(255,43,214,.20)')},{k:'toxic',n:['พิษ','Toxic'],bg:'#040a05',ac:'#b6ff00',ac2:'#00ffa3',pg:NG('rgba(0,255,163,.16)')},{k:'sunset',n:['พระอาทิตย์ตก','Sunset'],bg:'#0d0408',ac:'#ff7a18',ac2:'#ff2bd6',pg:NG('rgba(255,122,24,.18)')},{k:'violet',n:['ม่วง','Violet'],bg:'#07041a',ac:'#a56bff',ac2:'#00e5ff',pg:NG('rgba(0,229,255,.16)')},{k:'rose',n:['ชมพู','Rose'],bg:'#10040d',ac:'#ff4fa3',ac2:'#ffb800',pg:NG('rgba(255,184,0,.14)')}]},
+{k:'colorful',n:['สีสัน','Colorful'],font:'prompt',sty:'soft',hf:{css:"'Mitr'",g:['Mitr:wght@400;500;600']},d:{m:'light',fg:'#2a2140',card:'#ffffff'},
+ pv:v=>`background:${v.c[0]};border-radius:20px;box-shadow:0 4px 10px rgba(60,40,100,.12)`,
+ v:[{k:'candy',n:['ลูกกวาด','Candy'],bg:'#efe6f4',ac:'#e8527a',c:['#ffd9e2','#d6e6ff','#d8f2de','#fff1c4','#e6dcff'],pg:'linear-gradient(160deg,#f3e9f5,#e4eefb 60%,#f9efe3)'},
+  {k:'sorbet',n:['ซอร์เบต์','Sorbet'],bg:'#fdeee2',ac:'#e8603c',c:['#ffd8c2','#ffc9d4','#fff0b8','#d4f0d8','#e0d4f5'],pg:'linear-gradient(160deg,#fff1e6,#ffe3ea 60%,#fdf4d8)'},
+  {k:'bright',n:['สดใส','Bright'],bg:'#f4f4fb',ac:'#5b4bdb',fg:'#1d1a33',c:['#ff9aa8','#8ec5ff','#7ee0a1','#ffd45e','#c4a5ff'],pg:'linear-gradient(160deg,#ffffff,#eef0ff)'},
+  {k:'retro',n:['เรโทร','Retro'],bg:'#f3ead9',ac:'#c4572c',fg:'#3a2e24',c:['#f2b8a0','#a8c8c4','#e8d08c','#c8b4d8','#b5cf9a'],pg:'linear-gradient(160deg,#f7efde,#efe2c8)'},
+  {k:'lagoon',n:['ลากูน','Lagoon'],bg:'#e3f4f4',ac:'#0f8f9a',c:['#c7ecee','#d8e6ff','#d6f2dc','#fff0c2','#e6e0fb'],pg:'linear-gradient(160deg,#eaf8f8,#d5eef0 60%,#f4f6e4)'}]},
+{k:'nature',n:['ธรรมชาติ','Nature'],font:'plex',sty:'soft',hf:{css:"'Cormorant Garamond'",g:['Cormorant+Garamond:wght@500;600;700']},d:{},
+ pv:v=>`background:${v.card};border:1.5px solid ${v.bd};border-radius:22px`,
+ v:[{k:'ocean',n:['ทะเล','Ocean'],m:'light',bg:'#e1e9f3',ac:'#1f4e8c',fg:'#12305c',card:'rgba(255,255,255,.55)',bd:'rgba(31,78,140,.35)',pg:LN('#eef2f7','#a3b7d4')},
+  {k:'sky',n:['ท้องฟ้า','Sky'],m:'light',bg:'#9ccbe8',ac:'#1d6fb8',fg:'#0b2a45',card:'rgba(255,255,255,.34)',bd:'rgba(255,255,255,.9)',pg:'linear-gradient(180deg,#6fa9d4 0%,#a9d0ec 30%,#e6f2fb 58%,#b5d98f 86%,#86b564 100%)'},
+  {k:'forest',n:['ป่าไม้','Forest'],m:'dark',bg:'#0e1f17',ac:'#7fd1a8',fg:'#e4f2e8',card:'rgba(255,255,255,.07)',bd:'rgba(160,220,185,.28)',pg:LN('#16352a','#0a1810')},
+  {k:'meadow',n:['ทุ่งหญ้า','Meadow'],m:'light',bg:'#e6f1d9',ac:'#3f7d2a',fg:'#25401a',card:'rgba(255,255,255,.55)',bd:'rgba(63,125,42,.30)',pg:LN('#f0f7e4','#d4e8bd')},
+  {k:'desert',n:['ทะเลทราย','Desert'],m:'light',bg:'#f3e3c9',ac:'#b5622a',fg:'#4a3220',card:'rgba(255,250,240,.6)',bd:'rgba(160,100,50,.28)',pg:LN('#f8ecd6','#ecd2a8')},
+  {k:'sunset',n:['พระอาทิตย์ตก','Sunset'],m:'dark',bg:'#3a1a4a',ac:'#ffb27a',fg:'#fff3ea',card:'rgba(255,255,255,.10)',bd:'rgba(255,200,170,.30)',pg:'linear-gradient(180deg,#2b1246,#5a2258 60%,#8a3a4a)'},
+  {k:'mist',n:['หมอก','Mist'],m:'light',bg:'#e6eaee',ac:'#4a6a7a',fg:'#22343f',card:'rgba(255,255,255,.55)',bd:'rgba(60,90,110,.28)',pg:LN('#f1f3f5','#cdd5dc')}]},
+{k:'pastel',n:['พาสเทล','Pastel'],font:'sarabun',sty:'soft',hf:{css:"'Lora'",g:['Lora:wght@500;600;700']},d:{m:'light'},
+ pv:v=>`background:${v.card};border-radius:20px;box-shadow:0 6px 16px rgba(${rg(v.ac)},.18)`,
+ v:[{k:'beige',n:['เบจ','Beige'],bg:'#f5ebe1',ac:'#a8735a',fg:'#5b4636',card:'rgba(255,251,246,.9)',pg:LN('#f8efe6','#f0e0d3')},
+  {k:'blush',n:['ชมพูอ่อน','Blush'],bg:'#f8dde4',ac:'#c24a6b',fg:'#5a2a3a',card:'rgba(255,248,250,.9)',pg:LN('#fbe7ec','#f5cfd9')},
+  {k:'lavender',n:['ลาเวนเดอร์','Lavender'],bg:'#e9e2f7',ac:'#7456c2',fg:'#3f3360',card:'rgba(250,248,255,.9)',pg:LN('#f1ecfb','#ddd2f2')},
+  {k:'mint',n:['มิ้นต์','Mint'],bg:'#dff1e6',ac:'#3a8a63',fg:'#2d4a3b',card:'rgba(247,255,250,.9)',pg:LN('#e8f6ee','#cfe8d9')},
+  {k:'peach',n:['พีช','Peach'],bg:'#fde4d3',ac:'#c8693f',fg:'#5a3524',card:'rgba(255,250,246,.9)',pg:LN('#fff0e5','#fad8c0')},
+  {k:'sky',n:['ฟ้าอ่อน','Sky'],bg:'#dfecf8',ac:'#3b78b8',fg:'#28435f',card:'rgba(248,252,255,.9)',pg:LN('#eaf3fb','#cfe2f4')}]}];
+const PMAP={bw:'glass',soft:'pastel',ocean:'nature'};
+const pkOf=()=>{if(PMAP[S.th])S.th=PMAP[S.th];return S.th&&PK.find(x=>x.k==S.th)};
+const mixc=(a,b,t)=>{const x=thHx(a),y=thHx(b);return thTo(x.map((q,i)=>q+(y[i]-q)*t))};
+const FGD=m=>m=='dark'?'#ffffff':'#0b1b3a';
+const CDG=(bg,ac,m)=>({fg:FGD(m),card:m=='dark'?'rgba(255,255,255,.08)':'rgba(255,255,255,.72)',pg:LN(mixc(bg,'#ffffff',m=='dark'?.07:.35),mixc(bg,'#000000',m=='dark'?.32:.06))});
+const CD={
+ cartoon:(bg,ac,m)=>({fg:m=='dark'?'#ffffff':'#141414',card:'#ffffff',bd:m=='dark'?'rgba(255,255,255,.3)':'#141414',mut:m=='dark'?'rgba(255,255,255,.66)':'rgba(20,20,20,.66)'}),
+ luxury:(bg,ac,m)=>({fg:m=='dark'?'#f6f1e6':'#241a10',card:'rgba({ac},.06)',bd:'rgba({ac},.30)',pg:LG('rgba('+rg(ac)+',.22)')}),
+ neon:(bg,ac,m)=>({fg:m=='dark'?'#f2f0ff':'#10102a',card:'rgba({ac},.05)',bd:'rgba({ac},.55)',pg:NG('rgba('+rg(ac)+',.20)')}),
+ glass:(bg,ac,m)=>({fg:FGD(m),card:m=='dark'?'rgba(255,255,255,.08)':'rgba(255,255,255,.34)',bd:m=='dark'?'rgba(255,255,255,.26)':'rgba(255,255,255,.75)',pg:m=='dark'?GL('rgba('+rg(ac)+',.40)','rgba(255,255,255,.14)','rgba('+rg(ac)+',.28)',.22):GL('rgba('+rg(ac)+',.45)','rgba(255,255,255,.7)','rgba('+rg(ac)+',.3)',.5)}),
+ colorful:(bg,ac,m)=>({fg:FGD(m),card:'#ffffff',pg:LN(mixc(bg,'#ffffff',m=='dark'?.05:.4),bg)}),
+ nature:CDG,pastel:CDG};
+const pkv=(p,k,cu)=>{let v=Object.assign({},p.d,p.v.find(x=>x.k==(k===undefined?S.tv:k))||p.v[0]);
+ if(cu&&(S.tcb||S.tca)){const bg=S.tcb||v.bg,ac=S.tca||v.ac,fb=bestFg(bg),m=fb=='#ffffff'?'dark':'light';v=Object.assign(v,{bg,ac,m,bd:'',mut:''},(CD[p.k]||CDG)(bg,ac,m));if(p.k!='cartoon'&&thCr(v.fg,bg)<7)v.fg=fb}
+ if(!v.bd)v.bd='rgba('+rg(v.fg)+',.14)';if(!v.mut)v.mut='rgba('+rg(v.fg)+',.62)';return v};
+const pgFill=(v)=>v.pg?v.pg.replace(/\{ac\}/g,rg(v.ac)):'none';
+const setTh=k=>{S.th=k;S.tv='';S.tcb='';S.tca='';S.pm='';if(k){const p=PK.find(x=>x.k==k);S.font=p.font;S.acc=''}save();render()};
+const setTv=k=>{S.tv=k;S.tcb='';S.tca='';S.acc='';save();render()};
+const setPm=m=>{S.pm=m;save();render()};
+const setPal=(k,m)=>{const q=PRE.find(x=>x.k==k);S.tcb=q[m][0];S.tca=q[m][1];S.acc='';S.pm=m;save();render()};
+const tci=(k,val)=>`<input type="color" value="${val}" style="width:64px;height:40px;padding:2px;flex:none" oninput="S.${k}=this.value;applyTheme()" onchange="save();render()">`;
+function packCard(){PK.forEach(p=>loadFont({g:p.hf.g}));const cur=pkOf();
+ const tiles=PK.map(p=>{const on=cur&&cur.k==p.k,v=on?pkv(p,undefined,true):pkv(p,'');return `<button class="thk ${S.th==p.k?'on':''}" onclick="setTh('${p.k}')"><span class="thv" style="background-color:${v.bg};background-image:${pgFill(v)};color:${v.fg};font-family:${p.hf.css},sans-serif"><span class="thm" style="${p.pv(v)}"><b>Aa</b><i style="background:${v.ac}"></i></span></span>${T(p.n[0],p.n[1])}</button>`}).join('');
+ const cl=`<button class="thk ${S.th?'':'on'}" onclick="setTh('')"><span class="thv" style="background:#000;color:#fff"><span class="thm" style="border:1px solid rgba(255,255,255,.3);border-radius:12px"><b>Aa</b><i style="background:#fff"></i></span></span>${T('คลาสสิก','Classic')}</button>`;
+ return `<div class="card"><b>${T('ธีม','Theme')}</b><p class="mut" style="margin:4px 0 0">${T('แต่ละธีมเปลี่ยนสี ฟอนต์ และรูปทรงพร้อมกัน','Each theme changes colors, fonts and shapes together.')}</p><div class="thg">${tiles}${cl}</div></div>`}
+function packColors(){const p=pkOf()||PK[0],cv=pkv(p,undefined,true),m=cv.m,cust=!!(S.tcb||S.tca),pm=S.pm||m;
+ const vs=p.v.map(x=>{const v=pkv(p,x.k),tx=lum(v.bg)<140?'#fff':'#0b1b3a';return `<button class="pz ${!cust&&pkv(p).k==v.k?'on':''}" onclick="setTv('${v.k}')"><span class="pzb" style="background-color:${v.bg};background-image:${pgFill(v)};color:${tx}"><i style="background:${v.ac}"></i><b>Aa</b></span>${T(v.n[0],v.n[1])}</button>`}).join('');
+ const pals=PRE.map(q=>{const bg=q[pm][0],ac=q[pm][1],tx=lum(bg)<140?'#fff':'#0b1b3a';return `<button class="pz ${S.tcb==bg&&S.tca==ac?'on':''}" onclick="setPal('${q.k}','${pm}')"><span class="pzb" style="background:${bg};color:${tx}"><i style="background:${ac}"></i><b>Aa</b></span>${T(q.n[0],q.n[1])}</button>`}).join('');
+ return `<div class="card"><b>${T('โทนสีของธีม','Theme colors')}</b><div class="pzg">${vs}</div>
+  <b>${T('สีอื่นๆ','More colors')}</b>
+  <div class="seg" style="grid-template-columns:repeat(2,1fr);margin:8px 0">${[['dark',T('มืด','Dark')],['light',T('สว่าง','Light')]].map(x=>`<button class="${pm==x[0]?'on':''}" onclick="setPm('${x[0]}')">${x[1]}</button>`).join('')}</div>
+  <div class="pzg">${pals}</div>
+  <b>${T('สีเน้น','Accent')}</b><div class="chips" style="gap:10px;align-items:center"><button class="chip ${!S.acc&&!S.tca?'on':''}" onclick="setAcc('')">${T('ตามธีม','Theme')}</button>${ACC.map(a=>`<button class="ad ${S.acc==a.k?'on':''}" style="background:${m=='dark'?a.d:a.l}" onclick="setAcc('${a.k}')" aria-label="${a.k}"></button>`).join('')}</div>
+  <details style="margin-top:12px" ${cust?'open':''}><summary class="mut" style="cursor:pointer">${T('ปรับสีเอง','Custom colors')}</summary>
+   <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${tci('tcb',cv.bg)}</div>
+   <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${tci('tca',S.cac||cv.ac)}</div>
+   <p class="mut">${T('ถ้าสีเน้นอ่านยากบนพื้นหลัง แอปจะปรับความสว่างให้อ่านออกอัตโนมัติ','If the accent is hard to read on the background, the app adjusts its brightness automatically.')}</p>
+   <button class="ghost" onclick="S.tcb='';S.tca='';S.acc='';S.pm='';save();render()">${T('กลับเป็นสีของธีม','Back to theme colors')}</button></details></div>`}
+const bestFg=bg=>{const c=['#ffffff','#0b1b3a','#000000'];for(const x of c)if(thCr(x,bg)>=7)return x;return c.reduce((q,x)=>thCr(x,bg)>thCr(q,bg)?x:q)};
+const onFor=a=>{for(const c of ['#ffffff','#0b1b3a'])if(thCr(c,a)>=4.5)return c;return thCr('#000000',a)>=thCr('#ffffff',a)?'#000000':'#ffffff'};
+function applyTheme(){if(S.pre===undefined)themeInit();
+ const pk=pkOf(),v=pk&&pkv(pk,undefined,true),R=document.documentElement;
+ if(pk){const ac=S.acc&&ACC.find(x=>x.k==S.acc);S.cbg=v.bg;S.cac=ac?(v.m=='dark'?ac.d:ac.l):v.ac}
+ else if(S.pre!='custom'){const m=curMode(),pr=PRE.find(x=>x.k==S.pre)||PRE[0],ac=S.acc&&ACC.find(x=>x.k==S.acc);S.cbg=pr[m][0];S.cac=ac?(m=='dark'?ac.d:ac.l):pr[m][1]}
+ const c=S.cbg||'#000000',a=fixContrast(S.cac||'#ffffff',c),dk=pk?v.m=='dark':lum(c)<140,r=R.style,P=(k,x)=>r.setProperty(k,x),U=k=>r.removeProperty(k);
+ P('--bg',c);P('--ac',a);P('--onac',onFor(a));P('--fg',dk?'#fff':'#0b1b3a');
  P('--card',dk?'rgba(255,255,255,.08)':'rgba(11,27,58,.06)');P('--mut',dk?'rgba(255,255,255,.62)':'rgba(11,27,58,.6)');P('--bd',dk?'rgba(255,255,255,.16)':'rgba(11,27,58,.16)');
- const f=FONTS.find(x=>x.k==S.font)||FONTS[0];loadFont(f);P('--ff',fam(f));document.documentElement.dataset.sty=S.sty||'round'}
+ const rgb=rg(a);P('--acrgb',rgb);P('--bgrgb',rg(c));
+ if(pk){const q=t=>t.replace(/\{ac\}/g,rgb);P('--fg',v.fg);P('--card',q(v.card));P('--bd',q(v.bd));P('--mut',v.mut);
+  if(v.pg)P('--pg',q(v.pg));else U('--pg');
+  P('--ac2',v.ac2||a);(v.c||[]).forEach((x,i)=>P('--c'+(i+1),x));if(!v.c)for(let i=1;i<=5;i++)U('--c'+i)}
+ else{U('--pg');U('--ac2');for(let i=1;i<=5;i++)U('--c'+i)}
+ P('color-scheme',dk?'dark':'light');P('--gls',dk?'.2':'.5');
+ const f=FONTS.find(x=>x.k==S.font)||FONTS[0];loadFont(f);P('--ff',fam(f));
+ if(pk){loadFont({g:pk.hf.g});P('--fh',pk.hf.css+','+fam(f))}else U('--fh');
+ if(pk)R.dataset.th=pk.k;else delete R.dataset.th;
+ R.dataset.sty=pk?pk.sty:(S.sty||'round');
+ const tm=document.querySelector('meta[name=theme-color]');if(tm)tm.content=c}
 
 function render(){
  applyTheme();document.documentElement.lang=S.lang;
@@ -853,14 +1036,20 @@ function rest(s){clearInterval(rt);if(!s){$('rest').style.display='none';return}
  tick();rt=setInterval(tick,250)}
 /* Settings */
 function settings(){
- const P=[['#000000','#ffffff'],['#ffffff','#000000'],['#0b1b3a','#8ab4ff'],['#0c0c0e','#c9c9d1'],['#f4f6fb','#2457d6'],['#10261f','#7fd1a8'],['#2a1633','#e6a8ff'],['#2b1b12','#ffb27a']];
- const ci=(k,v)=>`<input type="color" value="${v}" style="width:64px;height:40px;padding:2px;flex:none" oninput="S.${k}=this.value;applyTheme()" onchange="save()">`;
- return head(T('ตั้งค่า','Settings'),0,'set')+`<div class="card"><b>${T('โทนสี','Colors')}</b>
- <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#000000')}</div>
- <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
- <div class="chips">${P.map(p=>`<button class="chip" style="background:${p[0]};border:3px solid ${p[1]};width:38px;height:38px;padding:0" onclick="S.cbg='${p[0]}';S.cac='${p[1]}';save();render()"></button>`).join('')}</div></div>
+ const ci=(k,v)=>`<input type="color" value="${v}" style="width:64px;height:40px;padding:2px;flex:none" oninput="S.${k}=this.value;S.pre='custom';S.th='';applyTheme()" onchange="save();render()">`;
+ return head(T('ตั้งค่า','Settings'),0,'set')+`${packCard()}${S.th?packColors():`<div class="card"><b>${T('โหมด','Mode')}</b>
+  <div class="seg s3">${[['dark',T('มืด','Dark')],['light',T('สว่าง','Light')],['auto',T('ตามระบบ','Auto')]].map(x=>`<button class="${S.mode==x[0]?'on':''}" onclick="setMode('${x[0]}')">${x[1]}</button>`).join('')}</div>
+  <b>${T('โทนสี','Colors')}</b>
+  <div class="pzg">${PRE.map(p=>{const v=p[curMode()],tx=lum(v[0])<140?'#fff':'#0b1b3a';return `<button class="pz ${S.pre==p.k?'on':''}" onclick="setPre('${p.k}')"><span class="pzb" style="background:${v[0]};color:${tx}"><i style="background:${v[1]}"></i><b>Aa</b></span>${T(p.n[0],p.n[1])}</button>`}).join('')}</div>
+  <b>${T('สีเน้น','Accent')}</b>
+  <div class="chips" style="gap:10px;align-items:center"><button class="chip ${S.pre!='custom'&&!S.acc?'on':''}" onclick="setAcc('')">${T('ตามธีม','Theme')}</button>${ACC.map(a=>`<button class="ad ${S.acc==a.k&&S.pre!='custom'?'on':''}" style="background:${curMode()=='dark'?a.d:a.l}" onclick="setAcc('${a.k}')" aria-label="${a.k}"></button>`).join('')}</div>
+  <details style="margin-top:12px" ${S.pre=='custom'?'open':''}><summary class="mut" style="cursor:pointer">${T('ปรับสีเอง','Custom colors')}</summary>
+   <div class="row"><span style="flex:1">${T('สีพื้นหลัง','Background')}</span>${ci('cbg',S.cbg||'#000000')}</div>
+   <div class="row"><span style="flex:1">${T('สีเน้น','Accent')}</span>${ci('cac',S.cac||'#ffffff')}</div>
+   <p class="mut">${T('ถ้าสีเน้นอ่านยากบนพื้นหลัง แอปจะปรับความสว่างให้อ่านออกอัตโนมัติ','If the accent is hard to read on the background, the app adjusts its brightness automatically.')}</p>
+   <button class="ghost" onclick="S.pre='mono';S.mode='dark';S.acc='';S.th='';save();render()">${T('รีเซ็ตเป็นค่าเริ่มต้น','Reset to default')}</button></details></div>`}
  <div class="card"><b>${T('ฟอนต์','Font')}</b><div class="chips">${FONTS.map(f=>{loadFont(f);return `<button class="chip ${(S.font||'prompt')==f.k?'on':''}" style="font-family:${fam(f)}" onclick="setLook('font','${f.k}')">${f.n}</button>`}).join('')}</div><p class="pv">${T('ตัวอย่าง กขค 0123 Aa','Preview กขค 0123 Aa')}</p></div>
- <div class="card"><b>${T('สไตล์','Style')}</b><div class="chips">${STY.map(y=>`<button class="chip ${(S.sty||'round')==y[0]?'on':''}" onclick="setLook('sty','${y[0]}')">${T(y[1][0],y[1][1])}</button>`).join('')}</div><p class="mut">${T(STY.find(y=>y[0]==(S.sty||'round'))[2][0],STY.find(y=>y[0]==(S.sty||'round'))[2][1])}</p></div>
+ ${S.th?'':`<div class="card"><b>${T('สไตล์','Style')}</b><div class="chips">${STY.map(y=>`<button class="chip ${(S.sty||'round')==y[0]?'on':''}" onclick="setLook('sty','${y[0]}')">${T(y[1][0],y[1][1])}</button>`).join('')}</div><p class="mut">${T(STY.find(y=>y[0]==(S.sty||'round'))[2][0],STY.find(y=>y[0]==(S.sty||'round'))[2][1])}</p></div>`}
  <div class="card row"><span style="flex:1"><b>${T('เสียงเตือนตอนพักจบ','Rest-end alarm')}</b></span><button class="chip ${S.snd?'on':''}" onclick="togSnd()">${S.snd?T('เปิด','On'):T('ปิด','Off')}</button></div>
  ${quoteSettings()}
  <div class="card"><b>${T('ภาษา','Language')}</b><div class="chips"><button class="chip ${S.lang=='th'?'on':''}" onclick="S.lang='th';save();render()">ไทย</button><button class="chip ${S.lang=='en'?'on':''}" onclick="S.lang='en';save();render()">English</button></div></div>
